@@ -987,9 +987,9 @@ async function generateReport(isPro=false){
     if(obFoot) obFoot.style.display='none';
     window.scrollTo(0,0);
   } catch(e){
-    console.error(e);
+    console.error('[2080] error:', e.message, e);
     document.getElementById('loading').classList.remove('active');
-    document.getElementById('dos-sections').innerHTML=getErrHTML();
+    document.getElementById('dos-sections').innerHTML=getErrHTML(e.message);
     document.getElementById('dossier').classList.add('active');
     document.body.style.background='var(--paper)';
     document.querySelectorAll('.orb').forEach(o=>o.style.display='none');
@@ -1491,8 +1491,9 @@ function getDemoJSON(s){
   };
 }
 
-function getErrHTML(){
-  return `<div class="alert" style="margin-top:32px"><div class="alert-kicker">Error de conexión</div><h3>No hemos podido conectar con el servidor</h3><p>Deja tu email y te enviamos tu informe personalizado en los próximos minutos.</p></div>`;
+function getErrHTML(msg){
+  const detail = msg ? `<p style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(244,239,230,.35);margin-top:8px;word-break:break-all">${msg}</p>` : '';
+  return `<div class="alert" style="margin-top:32px"><div class="alert-kicker">Error de conexión</div><h3>No hemos podido conectar con el servidor</h3><p>Deja tu email y te enviamos tu informe en los próximos minutos.</p>${detail}</div>`;
 }
 
 function delay(ms){return new Promise(r=>setTimeout(r,ms));}

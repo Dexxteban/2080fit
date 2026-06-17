@@ -1,3 +1,5 @@
+const https = require('https');
+
 const AIRTABLE_TABLE = 'Usuarios';
 
 const FREE_SYSTEM = `Eres experto en longevidad. Generas datos estructurados en JSON para informes de salud de personas 40-65 años.
@@ -27,52 +29,65 @@ REGLAS ABSOLUTAS:
 - Usa los valores de edad_metabolica_actual y edad_metabolica_objetivo que se te pasan
 - El plan PRO incluye menu_semanal y plan_entrenamiento detallados`;
 
-async function saveToAirtable(fields) {
-  const key = process.env.AIRTABLE_KEY;
-  const base = process.env.AIRTABLE_BASE;
-  if (!key || !base) return;
-  try {
-    await fetch(`https://api.airtable.com/v0/${base}/${AIRTABLE_TABLE}`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields })
-    });
-  } catch (e) {
-    console.error('[Airtable] save error:', e.message);
-  }
+function httpsPost(hostname, path, headers, body) {
+  return new Promise((resolve, reject) => {
+    const bodyStr = typeof body === 'string' ? body : JSON.stringify(body);
+    const req = https.request(
+      {
+        hostname,
+        path,
+        method: 'POST',
+        headers: { ...headers, 'Content-Length': Buffer.byteLength(bodyStr) }
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => resolve({ status: res.statusCode, body: data }));
+      }
+    );
+    req.on('error', reject);
+    req.write(bodyStr);
+    req.end();
+  });
 }
 
 async function callClaude(apiKey, system, prompt, maxTokens) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
+  const { status, body } = await httpsPost(
+    'api.anthropic.com',
+    '/v1/messages',
+    {
       'Content-Type': 'application/json',
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01'
     },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: maxTokens,
-      system,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error?.message || `Claude API ${response.status}`);
+    { model: 'claude-sonnet-4-6', max_tokens: maxTokens, system, messages: [{ role: 'user', content: prompt }] }
+  );
+  const data = JSON.parse(body);
+  if (status !== 200) throw new Error(data.error?.message || `Claude API ${status}`);
   return { text: data.content?.[0]?.text || '{}', usage: data.usage };
 }
 
+function saveToAirtable(fields) {
+  const key = process.env.AIRTABLE_KEY;
+  const base = process.env.AIRTABLE_BASE;
+  if (!key || !base) return;
+  httpsPost(
+    'api.airtable.com',
+    `/v0/${base}/${AIRTABLE_TABLE}`,
+    { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+    { fields }
+  ).catch((e) => console.error('[Airtable] save error:', e.message));
+}
+
 exports.handler = async (event) => {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
+
   if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
-      },
-      body: ''
-    };
+    return { statusCode: 204, headers: corsHeaders, body: '' };
   }
 
   if (event.httpMethod !== 'POST') {
@@ -83,8 +98,8 @@ exports.handler = async (event) => {
   if (!apiKey) {
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'ANTHROPIC_API_KEY no configurada en Netlify' })
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'ANTHROPIC_API_KEY no configurada en Netlify → Site configuration → Environment variables' })
     };
   }
 
@@ -94,7 +109,7 @@ exports.handler = async (event) => {
   } catch {
     return {
       statusCode: 400,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: 'Body JSON inválido' })
     };
   }
@@ -103,7 +118,7 @@ exports.handler = async (event) => {
   if (!prompt) {
     return {
       statusCode: 400,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: 'Falta el campo prompt' })
     };
   }
@@ -116,44 +131,41 @@ exports.handler = async (event) => {
   try {
     ({ text, usage } = await callClaude(apiKey, system, prompt, maxTokens));
   } catch (err) {
-    console.error('[Claude] primer intento fallido:', err.message, '— reintentando...');
+    console.error('[Claude] intento 1 fallido:', err.message);
     try {
       ({ text, usage } = await callClaude(apiKey, system, prompt, maxTokens));
     } catch (err2) {
       return {
         statusCode: 502,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: err2.message })
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Claude API error: ' + err2.message })
       };
     }
   }
 
-  // Verificar que el JSON es parseable; si no, un reintento más
   let parsed;
   try {
     const clean = text.replace(/```json|```/g, '').trim();
     parsed = JSON.parse(clean);
   } catch {
-    console.warn('[Claude] JSON malformado en primer intento — reintentando...');
+    console.warn('[Claude] JSON malformado, reintentando...');
     try {
       const retry = await callClaude(apiKey, system, prompt, maxTokens);
-      text = retry.text;
-      usage = retry.usage;
-      const clean2 = text.replace(/```json|```/g, '').trim();
+      const clean2 = retry.text.replace(/```json|```/g, '').trim();
       parsed = JSON.parse(clean2);
+      usage = retry.usage;
     } catch (parseErr) {
       return {
         statusCode: 502,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'No se pudo parsear la respuesta de Claude' })
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Respuesta de Claude no parseable: ' + parseErr.message })
       };
     }
   }
 
   const ms = Date.now() - t0;
-  console.log(`[generate] perfil=${parsed.perfil || '?'} | tokens=${usage?.output_tokens || '?'} | ms=${ms} | pro=${isPro}`);
+  console.log(`[generate] perfil="${parsed.perfil || '?'}" | tokens=${usage?.output_tokens || '?'} | ms=${ms} | pro=${isPro}`);
 
-  // Guardar en Airtable (fire-and-forget)
   if (userData) {
     saveToAirtable({
       Nombre: userData.nombre || 'Anónimo',
@@ -179,7 +191,7 @@ exports.handler = async (event) => {
 
   return {
     statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     body: JSON.stringify({ text: JSON.stringify(parsed) })
   };
 };
