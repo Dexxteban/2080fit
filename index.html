@@ -956,7 +956,12 @@ async function generateReport(isPro=false){
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({prompt:getPrompt(imc,edadMeta),userData,isPro})
       });
-      if(!res.ok){const e=await res.json();throw new Error(e.error||'Error del servidor');}
+      if(!res.ok){
+        let errMsg='HTTP '+res.status;
+        try{const e=await res.clone().json();errMsg=e.error||errMsg;}
+        catch{try{const t=await res.text();errMsg=res.status===404?'Función no encontrada (404) — verifica el deploy en Netlify':t.slice(0,120);}catch{}}
+        throw new Error(errMsg);
+      }
       const raw=await res.json();
       const txt=raw.text||'{}';
       const clean=txt.replace(/```json|```/g,'').trim();

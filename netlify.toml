@@ -2,12 +2,8 @@
   publish = "."
   functions = "netlify/functions"
 
-# Node 18 para el entorno de build y runtime de funciones
 [build.environment]
   NODE_VERSION = "18"
-
-[functions]
-  node_bundler = "esbuild"
 
 [[redirects]]
   from = "/api/generate"
