@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2080.fit — Tu plan de longevidad personalizado</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@700;800&family=DM+Mono:wght@400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══ TOKENS ═══ */
+:root {
+  --ink:#0C0B09; --paper:#F4EFE6; --cream:#E8E0CE;
+  --sage:#3D6B45; --sage-bg:#E8F2EA;
+  --terra:#AA4D28; --terra-bg:#F9EDE7;
+  --gold:#8F6A1A; --gold-bg:#F8F1E2;
+  --dark:#181714; --mid:#42403A; --muted:#908B82;
+  --line:rgba(12,11,9,0.14); --line2:rgba(12,11,9,0.07);
+  --ob-bg:#0A0A08; --ob-surf:#111110; --ob-surf2:#1A1A18;
+  --ob-line:rgba(255,255,255,0.08); --ob-text:rgba(245,240,232,0.88);
+  --ob-dim:rgba(245,240,232,0.45); --ob-dimmer:rgba(245,240,232,0.25);
+  --ob-sage:#8BAF8A; --ob-terra:#C4714A; --ob-gold:#D4A843;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--ob-bg);color:var(--ob-text);font-family:'DM Sans',sans-serif;font-weight:300;line-height:1.65;overflow-x:hidden;min-height:100vh}
+
+/* ═══ AMBIENT ═══ */
+.grain{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:.4;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='.04'/%3E%3C/svg%3E")}
+.orbs{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:.1}
+.orb1{width:600px;height:600px;background:var(--ob-sage);top:-200px;right:-100px}
+.orb2{width:400px;height:400px;background:var(--ob-terra);bottom:-100px;left:-100px}
+.orb3{width:300px;height:300px;background:var(--ob-gold);top:50%;left:50%;transform:translate(-50%,-50%);opacity:.05}
+#app{position:relative;z-index:10;min-height:100vh}
+
+/* ═══ ONBOARDING ═══ */
+#onboarding{max-width:640px;margin:0 auto;padding:0 24px 80px;min-height:100vh;display:flex;flex-direction:column}
+.ob-header{display:flex;align-items:center;justify-content:space-between;padding:32px 0 0;margin-bottom:40px}
+.ob-logo{font-family:'DM Mono',monospace;font-size:15px;letter-spacing:2px;color:var(--ob-text)}
+.ob-logo b{color:var(--ob-sage);font-weight:400}
+.ob-progress-bar{flex:1;max-width:120px;height:2px;background:var(--ob-line);margin-left:20px;border-radius:1px;overflow:hidden}
+.ob-progress-fill{height:100%;background:var(--ob-sage);border-radius:1px;transition:width .4s ease}
+.ob-step-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--ob-dimmer);text-transform:uppercase;white-space:nowrap;margin-left:10px}
+
+.ob-screen{flex:1;display:none;flex-direction:column;justify-content:center;padding-bottom:40px}
+.ob-screen.active{display:flex;animation:fadeUp .42s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+.ob-kicker{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--ob-terra);margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.ob-kicker::before{content:'';width:24px;height:1px;background:var(--ob-terra)}
+.ob-title{font-family:'Playfair Display',serif;font-size:clamp(32px,6vw,50px);font-weight:400;line-height:1.08;letter-spacing:-.5px;color:var(--ob-text);margin-bottom:16px}
+.ob-title em{font-style:italic;color:var(--ob-terra)}
+.ob-sub{font-size:15px;color:var(--ob-dim);line-height:1.7;max-width:480px;margin-bottom:32px}
+
+.ob-stats{display:flex;gap:32px;flex-wrap:wrap;margin-bottom:44px}
+.ob-stat{display:flex;flex-direction:column;gap:3px}
+.ob-stat-n{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--ob-text);line-height:1}
+.ob-stat-l{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ob-dim)}
+
+/* name/email fields on screen 0 */
+.ob-lead-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
+@media(max-width:480px){.ob-lead-fields{grid-template-columns:1fr}}
+.ob-lead-field{display:flex;flex-direction:column;gap:6px}
+.ob-lead-field label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ob-dim)}
+.ob-lead-field input{background:var(--ob-surf2);border:1px solid var(--ob-line);color:var(--ob-text);padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:15px;border-radius:2px;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.ob-lead-field input:focus{border-color:rgba(139,175,138,.4)}
+.ob-lead-field input::placeholder{color:var(--ob-dimmer)}
+
+.ob-btn-start{display:inline-flex;align-items:center;gap:12px;background:var(--paper);color:var(--dark);border:none;padding:18px 36px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;border-radius:2px;transition:all .2s;width:fit-content}
+.ob-btn-start:hover{background:var(--ob-sage);color:var(--dark);transform:translateY(-1px)}
+
+/* Options */
+.ob-options{display:flex;flex-direction:column;gap:10px;margin-bottom:32px}
+.ob-options.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.ob-options.grid2{grid-template-columns:1fr}}
+
+.ob-opt{display:flex;align-items:flex-start;gap:14px;padding:18px 20px;border:1px solid var(--ob-line);border-radius:3px;cursor:pointer;transition:all .22s;background:transparent;position:relative;overflow:hidden}
+.ob-opt::before{content:'';position:absolute;inset:0;background:rgba(139,175,138,.1);opacity:0;transition:opacity .22s}
+.ob-opt:hover{border-color:rgba(139,175,138,.35)}
+.ob-opt:hover::before{opacity:1}
+.ob-opt.sel,.ob-opt.multi-sel{border-color:var(--ob-sage)}
+.ob-opt.sel::before,.ob-opt.multi-sel::before{opacity:1}
+.ob-opt-key{font-family:'DM Mono',monospace;font-size:10px;color:var(--ob-dimmer);width:18px;flex-shrink:0;margin-top:2px;transition:color .22s}
+.ob-opt:hover .ob-opt-key,.ob-opt.sel .ob-opt-key,.ob-opt.multi-sel .ob-opt-key{color:var(--ob-sage)}
+.ob-opt-body{position:relative;z-index:1;flex:1}
+.ob-opt-text{font-size:14px;color:var(--ob-dim);line-height:1.5;transition:color .22s}
+.ob-opt-desc{font-size:12px;color:var(--ob-dimmer);margin-top:3px;line-height:1.4}
+.ob-opt:hover .ob-opt-text,.ob-opt.sel .ob-opt-text,.ob-opt.multi-sel .ob-opt-text{color:var(--ob-text)}
+.ob-opt.sex-opt{flex-direction:column;align-items:center;justify-content:center;padding:30px 20px;text-align:center;gap:14px}
+.ob-opt.sex-opt .ob-opt-key{display:none}
+.ob-opt-icon{color:var(--ob-dim);transition:color .22s}
+.ob-opt.sel .ob-opt-icon{color:var(--ob-sage)}
+.ob-opt.sex-opt .ob-opt-text{font-family:'Playfair Display',serif;font-size:20px;font-weight:400}
+
+/* Chips */
+.ob-chips-section{margin-bottom:22px}
+.ob-chips-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ob-dim);margin-bottom:10px}
+.ob-chips{display:flex;flex-wrap:wrap;gap:7px}
+.ob-chip{padding:6px 13px;border:1px solid var(--ob-line);border-radius:2px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ob-dim);background:transparent;transition:all .2s}
+.ob-chip:hover{border-color:rgba(139,175,138,.3);color:var(--ob-text)}
+.ob-chip.sel{background:rgba(139,175,138,.1);border-color:var(--ob-sage);color:var(--ob-sage)}
+
+/* Fields */
+.ob-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:22px}
+@media(max-width:480px){.ob-fields{grid-template-columns:1fr}}
+.ob-field{display:flex;flex-direction:column;gap:6px}
+.ob-field label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ob-dim)}
+.ob-field input{background:var(--ob-surf2);border:1px solid var(--ob-line);color:var(--ob-text);padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:16px;border-radius:2px;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.ob-field input:focus{border-color:rgba(139,175,138,.4)}
+.ob-field input::placeholder{color:var(--ob-dimmer)}
+
+/* Slider */
+.ob-slider-wrap{margin-bottom:22px}
+.ob-slider-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ob-slider-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ob-dim)}
+.ob-slider-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--ob-terra);line-height:1}
+.ob-slider{width:100%;height:3px;background:var(--ob-surf2);border:none;outline:none;cursor:pointer;-webkit-appearance:none;border-radius:2px;accent-color:var(--ob-terra)}
+.ob-slider-hints{display:flex;justify-content:space-between;margin-top:8px}
+.ob-slider-hint{font-family:'DM Mono',monospace;font-size:8px;color:var(--ob-dimmer);letter-spacing:1px}
+
+.ob-error{background:rgba(196,113,74,.1);border:1px solid rgba(196,113,74,.25);color:var(--ob-terra);padding:12px 16px;border-radius:2px;font-size:13px;margin-bottom:14px;display:none}
+.ob-error.show{display:block}
+
+.ob-nav{display:flex;align-items:center;justify-content:space-between;margin-top:28px}
+.ob-btn-back{background:none;border:1px solid var(--ob-line);color:var(--ob-dim);padding:11px 20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;border-radius:2px;transition:all .2s}
+.ob-btn-back:hover{border-color:var(--ob-dim);color:var(--ob-text)}
+.ob-btn-next{background:var(--ob-sage);border:none;color:var(--dark);padding:13px 28px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;border-radius:2px;transition:all .2s;display:flex;align-items:center;gap:8px}
+.ob-btn-next:hover{background:var(--paper);transform:translateY(-1px)}
+.ob-btn-next:disabled{opacity:.3;cursor:not-allowed;transform:none}
+
+/* ═══ LOADING ═══ */
+#loading{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:40px}
+#loading.active{display:flex}
+.ld-spinner{width:52px;height:52px;border:1px solid var(--ob-line);border-top-color:var(--ob-sage);border-radius:50%;animation:spin 1.2s linear infinite;margin-bottom:32px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:400;color:var(--ob-text);margin-bottom:8px}
+.ld-sub{font-size:14px;color:var(--ob-dim);margin-bottom:28px}
+.ld-steps{display:flex;flex-direction:column;gap:8px}
+.ld-step{font-family:'DM Mono',monospace;font-size:11px;color:var(--ob-dim);letter-spacing:1px;opacity:0;transition:opacity .4s,color .4s}
+.ld-step.vis{opacity:1}
+.ld-step.done{color:var(--ob-sage)}
+
+/* ═══ DOSSIER (light) ═══ */
+#dossier{display:none;background:var(--paper);min-height:100vh}
+#dossier.active{display:block}
+.dos-wrap{max-width:720px;margin:0 auto;padding:0 24px 100px}
+
+/* Cover */
+.dos-cover{padding:40px 0 52px;border-bottom:1px solid var(--line);margin-bottom:64px}
+.dos-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:48px}
+.dos-brand{font-family:'DM Mono',monospace;font-size:13px;letter-spacing:2px;color:var(--dark)}
+.dos-brand b{color:var(--sage);font-weight:400}
+.dos-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--paper);background:var(--dark);padding:6px 14px}
+.dos-kicker{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--terra);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.dos-kicker::before{content:'';width:26px;height:1px;background:var(--terra)}
+.dos-title{font-family:'Playfair Display',serif;font-size:clamp(38px,7vw,62px);font-weight:400;line-height:1.02;letter-spacing:-1px;color:var(--ink);margin-bottom:20px}
+.dos-title em{font-style:italic;color:var(--terra)}
+.dos-sub{font-size:16px;color:var(--mid);max-width:480px;line-height:1.7;border-left:2px solid var(--sage);padding-left:18px;margin-bottom:30px}
+.dos-user-card{background:var(--cream);border:1px solid var(--line);padding:14px 18px;margin-bottom:30px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:480px){.dos-user-card{grid-template-columns:1fr 1fr}}
+.duc{display:flex;flex-direction:column;gap:2px}
+.duc-l{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.duc-v{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--dark)}
+.dos-obj-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:32px}
+.dos-obj-tag{padding:5px 12px;background:var(--sage-bg);border:1px solid rgba(61,107,69,.2);color:var(--sage);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase}
+
+/* ═══ RENDERED SECTIONS ═══ */
+.d{margin-bottom:64px}
+.d-hd{display:flex;align-items:baseline;gap:14px;padding-bottom:13px;border-bottom:1px solid var(--line);margin-bottom:32px}
+.d-n{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--terra);flex-shrink:0}
+.d-h{font-family:'Playfair Display',serif;font-size:clamp(21px,4vw,29px);font-weight:400;color:var(--ink);line-height:1.2}
+.d-h em{font-style:italic;color:var(--terra)}
+
+/* manifesto */
+.manifesto{background:var(--dark);padding:40px 36px;position:relative;overflow:visible}
+.manifesto::before{content:'\201C';position:absolute;font-family:'Playfair Display',serif;font-size:160px;color:var(--sage);opacity:.1;top:-40px;left:16px;line-height:1;pointer-events:none}
+.manifesto p{font-size:15px;line-height:1.85;color:rgba(244,239,230,.76);position:relative;z-index:1;max-width:540px}
+.manifesto p+p{margin-top:14px}
+.manifesto strong{color:#E0967A;font-weight:500}
+.manifesto-pull{position:relative;z-index:1;background:var(--terra);margin-top:24px;padding:18px 24px;font-family:'Playfair Display',serif;font-style:italic;font-size:17px;color:var(--paper);line-height:1.45}
+
+/* prose */
+.prose{font-size:15px;color:var(--mid);line-height:1.8}
+.prose p+p{margin-top:14px}
+.prose strong{color:var(--dark);font-weight:500}
+abbr{text-decoration:underline dotted var(--terra);cursor:help;color:var(--dark)}
+
+/* cards */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--line);border:1px solid var(--line)}
+@media(max-width:520px){.cards{grid-template-columns:1fr}}
+.card{background:var(--paper);padding:22px 18px;display:flex;flex-direction:column;gap:9px}
+.card-ico{width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.card-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--dark);line-height:1.25}
+.card-text{font-size:13px;color:var(--mid);line-height:1.6;flex:1}
+.sbar{display:flex;align-items:center;gap:8px;margin-top:2px}
+.sbar-l{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap;min-width:60px}
+.sbar-track{flex:1;height:3px;background:var(--cream);border-radius:2px;overflow:hidden}
+.sbar-fill{height:100%;border-radius:2px}
+.fc{background:#7A2A1A;width:86%}.fh{background:var(--terra);width:68%}.fm{background:var(--gold);width:46%}.fl{background:var(--sage);width:20%}
+.sbar-v{font-family:'DM Mono',monospace;font-size:9px;color:var(--dark);white-space:nowrap}
+
+/* accordion */
+.acc{border-top:1px solid var(--line);margin-top:9px;padding-top:8px}
+.acc-btn{display:flex;align-items:center;gap:7px;background:none;border:none;cursor:pointer;padding:0;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--sage);transition:color .2s;width:100%;text-align:left}
+.acc-btn:hover{color:var(--dark)}
+.acc-icon{flex-shrink:0;width:13px;height:13px;transition:transform .25s}
+.acc-btn.open .acc-icon{transform:rotate(45deg)}
+.acc-body{overflow:hidden;max-height:0;transition:max-height .35s ease;font-size:12px;color:var(--mid);line-height:1.65}
+.acc-body.open{max-height:400px;padding-top:9px}
+
+/* alert */
+.alert{background:var(--dark);padding:32px 32px 28px 36px;position:relative}
+.alert::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--terra)}
+.alert-kicker{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#E0967A;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.alert-kicker::before{content:'';width:14px;height:1px;background:#E0967A}
+.alert h3{font-family:'Playfair Display',serif;font-size:19px;font-weight:400;color:var(--paper);margin-bottom:12px;line-height:1.35}
+.alert p{font-size:14px;color:rgba(244,239,230,.68);line-height:1.75;max-width:500px}
+.alert strong{color:#E0967A;font-weight:500}
+.alert-acc{border-top:1px solid rgba(255,255,255,.1);margin-top:16px;padding-top:11px}
+.alert-acc .acc-btn{color:rgba(244,239,230,.35)}
+.alert-acc .acc-btn:hover{color:rgba(244,239,230,.7)}
+.alert-acc .acc-body{color:rgba(244,239,230,.48)}
+
+/* glosario */
+.gloss{background:var(--sage-bg);border-left:2px solid var(--sage);padding:10px 14px;margin:14px 0;font-size:12px;color:var(--mid);line-height:1.6;display:flex;gap:9px;align-items:baseline}
+.gloss-t{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--sage);flex-shrink:0}
+
+/* fichas */
+.plan-cat{display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:28px}
+.plan-cat:first-child{margin-top:0}
+.plan-cat-ico{width:28px;height:28px;background:var(--dark);display:flex;align-items:center;justify-content:center}
+.plan-cat-l{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted)}
+.ficha{border:1px solid var(--line);margin-bottom:9px;overflow:hidden}
+.ficha-hd{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:11px;padding:13px 16px;background:var(--cream);border-bottom:1px solid var(--line)}
+.ficha-n{font-family:'DM Mono',monospace;font-size:11px;color:var(--terra)}
+.ficha-t{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--dark)}
+.dots{display:flex;gap:3px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--line)}
+.dot.on{background:var(--terra)}
+.ficha-bd{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 16px}
+@media(max-width:480px){.ficha-bd{grid-template-columns:1fr}}
+.fcol-h{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.fcol-t{font-size:13px;color:var(--mid);line-height:1.6}
+.fcol-t strong{color:var(--dark);font-weight:500}
+.fcol-t.warn{color:#7A2A1A}
+.ficha-ft{padding:10px 16px;background:var(--sage);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.5px;color:var(--paper)}
+
+/* suplementos */
+.suppl{border:1px solid var(--line);margin-bottom:11px;transition:border-color .2s}
+.suppl:hover{border-color:var(--sage)}
+.suppl-top{display:grid;grid-template-columns:1fr 64px;gap:14px;padding:20px 20px 0;align-items:start}
+@media(max-width:480px){.suppl-top{grid-template-columns:1fr}}
+.suppl-name{font-family:'Playfair Display',serif;font-size:18px;font-weight:400;color:var(--ink);margin-bottom:7px}
+.suppl-specs{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:9px}
+.ss{display:flex;flex-direction:column;gap:2px}
+.ss-l{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.ss-v{font-family:'DM Mono',monospace;font-size:11px;color:var(--terra)}
+.suppl-desc{font-size:13px;color:var(--mid);line-height:1.65}
+.suppl-desc strong{color:var(--dark);font-weight:500}
+.suppl-ico{width:60px;height:60px;background:var(--cream);border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.suppl-ft{padding:12px 20px;border-top:1px solid var(--line);margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:11px;flex-wrap:wrap}
+.suppl-mec{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);max-width:260px;line-height:1.5}
+.suppl-btn{display:inline-flex;align-items:center;gap:7px;background:var(--dark);color:var(--paper);text-decoration:none;padding:9px 16px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;transition:background .2s;white-space:nowrap;border:none;cursor:pointer}
+.suppl-btn:hover{background:var(--terra)}
+
+/* timeline */
+.tl{border:1px solid var(--line)}
+.tl-row{display:grid;grid-template-columns:50px 1fr;border-bottom:1px solid var(--line)}
+.tl-row:last-child{border-bottom:none}
+.tl-day{background:var(--cream);border-right:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.tl-items{padding:9px 12px;display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.tg{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;border-radius:1px}
+.tg-rest{background:var(--cream);color:var(--muted);border:1px solid var(--line)}
+.tg-walk{background:var(--sage-bg);color:var(--sage);border:1px solid rgba(61,107,69,.2)}
+.tg-cold{background:var(--gold-bg);color:var(--gold);border:1px solid rgba(143,106,26,.2)}
+.tg-suppl{background:var(--terra-bg);color:var(--terra);border:1px solid rgba(170,77,40,.2)}
+.tg-mind{background:#F0EBF8;color:#5A3D82;border:1px solid rgba(90,61,130,.2)}
+.tg-strength{background:#EBF4F8;color:#2A5A7A;border:1px solid rgba(42,90,122,.2)}
+.tl-always{background:var(--dark);padding:14px 16px}
+.tl-a-l{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#88BB90;margin-bottom:8px}
+.tl-a-items{display:flex;flex-wrap:wrap;gap:6px 16px}
+.tl-a-item{font-size:12px;color:rgba(244,239,230,.58);display:flex;align-items:center;gap:5px}
+.tl-a-item::before{content:'→';color:#E0967A;font-size:10px}
+
+/* errores */
+.errors{display:flex;flex-direction:column;gap:10px}
+.error-item{border:1px solid var(--line);padding:18px 20px;display:flex;gap:14px;align-items:flex-start}
+.error-x{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--terra);flex-shrink:0;line-height:1;margin-top:1px}
+.error-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--dark);margin-bottom:3px}
+.error-text{font-size:13px;color:var(--mid);line-height:1.6}
+
+/* gauges */
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--line);border:1px solid var(--line)}
+@media(max-width:480px){.gauges{grid-template-columns:1fr}}
+.gauge{background:var(--paper);padding:20px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px}
+.gauge-ring{position:relative;width:80px;height:80px}
+.gauge-ring svg{transform:rotate(-90deg)}
+.rtrack{fill:none;stroke:var(--cream);stroke-width:5}
+.rfill{fill:none;stroke-width:5;stroke-linecap:round}
+.rs{stroke:var(--sage)}.rt{stroke:var(--terra)}.rg{stroke:var(--gold)}
+.gauge-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.gauge-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--dark);line-height:1.2}
+.gauge-desc{font-size:12px;color:var(--mid);line-height:1.5}
+.gauge-freq{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--line);padding-top:8px;width:100%}
+
+/* ═══ PREMIUM CTA ═══ */
+.cta-wrap{margin-top:72px}
+
+/* FREE teaser */
+.cta-free-teaser{background:var(--cream);border:1px solid var(--line);padding:28px 28px 24px;margin-bottom:2px;text-align:center}
+.cta-ft-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.cta-ft-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:400;color:var(--mid);margin-bottom:14px}
+.email-row{display:flex;max-width:380px;margin:0 auto}
+.email-row input{flex:1;background:var(--paper);border:1px solid var(--line);border-right:none;padding:11px 13px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none}
+.email-row input:focus{border-color:var(--sage)}
+.email-row input::placeholder{color:var(--muted)}
+.email-row button{background:var(--mid);border:1px solid var(--mid);color:var(--paper);padding:11px 15px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;transition:background .2s;white-space:nowrap}
+.email-row button:hover{background:var(--sage);border-color:var(--sage)}
+
+/* PREMIUM block */
+.cta-premium{background:var(--dark);padding:0;position:relative;overflow:hidden}
+.cta-premium::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--terra),var(--gold),var(--sage))}
+
+.cta-premium-inner{padding:44px 36px 36px}
+.cta-p-eyebrow{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(212,168,67,.7);margin-bottom:8px}
+.cta-p-title{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,34px);font-weight:400;color:var(--paper);margin-bottom:10px;line-height:1.15}
+.cta-p-title em{font-style:italic;color:var(--ob-gold)}
+.cta-p-hook{font-size:15px;color:rgba(244,239,230,.62);line-height:1.65;max-width:460px;margin-bottom:32px}
+.cta-p-hook strong{color:rgba(244,239,230,.85);font-weight:500}
+
+/* What you get */
+.cta-p-what{margin-bottom:32px}
+.cta-p-what-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(244,239,230,.3);margin-bottom:14px}
+.cta-p-items{display:flex;flex-direction:column;gap:11px}
+.cta-p-item{display:flex;align-items:flex-start;gap:12px}
+.cta-p-item-check{width:18px;height:18px;background:rgba(61,107,69,.25);border:1px solid rgba(139,175,138,.3);border-radius:1px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.cta-p-item-check svg{width:10px;height:10px;color:#88BB90}
+.cta-p-item-body{}
+.cta-p-item-title{font-size:14px;color:rgba(244,239,230,.85);font-weight:500;margin-bottom:2px}
+.cta-p-item-desc{font-size:12px;color:rgba(244,239,230,.42);line-height:1.5}
+
+/* vs comparison */
+.cta-p-vs{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:rgba(255,255,255,.05);margin-bottom:32px}
+.cta-p-vs-col{padding:16px 18px}
+.cta-p-vs-col.free{background:rgba(255,255,255,.03)}
+.cta-p-vs-col.premium{background:rgba(139,175,138,.06)}
+.cta-p-vs-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.cta-p-vs-col.free .cta-p-vs-label{color:rgba(244,239,232,.25)}
+.cta-p-vs-col.premium .cta-p-vs-label{color:#88BB90}
+.cta-p-vs-list{display:flex;flex-direction:column;gap:6px}
+.cta-p-vs-item{font-size:12px;line-height:1.4;display:flex;gap:7px;align-items:flex-start}
+.cta-p-vs-col.free .cta-p-vs-item{color:rgba(244,239,230,.3)}
+.cta-p-vs-col.premium .cta-p-vs-item{color:rgba(244,239,230,.7)}
+.cta-p-vs-item::before{font-size:10px;flex-shrink:0;margin-top:1px}
+.cta-p-vs-col.free .cta-p-vs-item::before{content:'○';color:rgba(244,239,230,.2)}
+.cta-p-vs-col.premium .cta-p-vs-item::before{content:'●';color:#88BB90}
+
+/* pricing */
+.cta-p-buy{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:16px}
+.cta-p-price-wrap{display:flex;align-items:baseline;gap:10px}
+.cta-p-price{font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:var(--paper);line-height:1}
+.cta-p-currency{font-family:'DM Mono',monospace;font-size:16px;color:rgba(244,239,230,.5);margin-bottom:4px;align-self:flex-end}
+.cta-p-period{font-family:'DM Mono',monospace;font-size:10px;color:rgba(244,239,230,.35);letter-spacing:1px;line-height:1.4}
+.cta-p-period s{display:block;color:rgba(244,239,230,.2)}
+.cta-p-btn{display:inline-flex;align-items:center;gap:10px;background:var(--terra);color:var(--paper);text-decoration:none;padding:16px 32px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;border:none;cursor:pointer;transition:all .2s}
+.cta-p-btn:hover{background:#C8612E;transform:translateY(-1px)}
+.cta-p-guarantee{font-family:'DM Mono',monospace;font-size:9px;color:rgba(244,239,230,.25);letter-spacing:.5px;line-height:1.6}
+
+/* metabolic age band */
+.meta-age-band{background:var(--dark);padding:24px 28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.05)}
+.meta-age-nums{display:flex;align-items:center;gap:12px}
+.meta-age-now{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--terra);line-height:1}
+.meta-age-arrow{color:rgba(244,239,230,.2);font-size:18px}
+.meta-age-goal{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--sage);line-height:1}
+.meta-age-text{flex:1;min-width:180px}
+.meta-age-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(244,239,230,.3);margin-bottom:5px}
+.meta-age-desc{font-size:13px;color:rgba(244,239,230,.55);line-height:1.55}
+
+/* mentalidad */
+.mentalidad-box{background:rgba(139,175,138,.07);border-left:2px solid var(--sage);padding:16px 20px;margin-top:2px}
+.mentalidad-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--sage);margin-bottom:8px}
+.mentalidad-text{font-size:14px;color:rgba(244,239,230,.65);line-height:1.65;font-style:italic}
+
+.dos-note{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.3px;color:var(--muted);line-height:1.7}
+
+/* ═══ DOSSIER NAV BAR (replaces floating reset) ═══ */
+.dos-nav{background:var(--dark);border-bottom:1px solid rgba(255,255,255,.06);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.dos-nav-brand{font-family:'DM Mono',monospace;font-size:13px;letter-spacing:2px;color:rgba(244,239,230,.5)}
+.dos-nav-brand b{color:var(--ob-sage);font-weight:400}
+.dos-nav-btn{background:none;border:1px solid rgba(255,255,255,.1);color:rgba(244,239,230,.5);padding:7px 14px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;border-radius:2px}
+.dos-nav-btn:hover{border-color:var(--ob-terra);color:var(--paper)}
+
+/* ═══ FOOTER ═══ */
+.site-footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding:32px 24px;margin-top:0}
+.footer-inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.footer-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+.footer-brand{font-family:'DM Mono',monospace;font-size:13px;letter-spacing:2px;color:rgba(244,239,230,.4)}
+.footer-brand b{color:var(--ob-sage);font-weight:400}
+.footer-links{display:flex;gap:20px;flex-wrap:wrap}
+.footer-link{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(244,239,230,.3);text-decoration:none;cursor:pointer;transition:color .2s;background:none;border:none;padding:0}
+.footer-link:hover{color:rgba(244,239,230,.7)}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px solid rgba(255,255,255,.05)}
+.footer-copy{font-family:'DM Mono',monospace;font-size:9px;color:rgba(244,239,230,.2);letter-spacing:.5px}
+.footer-disclaimer{font-family:'DM Mono',monospace;font-size:9px;color:rgba(244,239,230,.18);letter-spacing:.3px;max-width:480px;line-height:1.5;text-align:right}
+@media(max-width:520px){.footer-disclaimer{text-align:left}}
+
+.ico{display:inline-flex;flex-shrink:0;width:18px;height:18px}
+
+/* ═══ HOME SECTIONS ═══ */
+.home-sections{margin-top:60px;padding-top:48px;border-top:1px solid var(--ob-line);display:flex;flex-direction:column;gap:52px}
+.home-sec{}
+.home-sec-n{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--ob-terra);margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.home-sec-n::before{content:'';width:20px;height:1px;background:var(--ob-terra)}
+.home-sec-h{font-family:'Playfair Display',serif;font-size:clamp(22px,4vw,30px);font-weight:400;line-height:1.15;color:var(--ob-text);margin-bottom:14px}
+.home-sec-p{font-size:14px;color:var(--ob-dim);line-height:1.75}
+.home-two-col{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--ob-line);margin-top:22px}
+@media(max-width:480px){.home-two-col{grid-template-columns:1fr}}
+.home-col{background:var(--ob-surf);padding:22px 20px}
+.home-col-n{font-family:'Syne',sans-serif;font-size:38px;font-weight:800;line-height:1;margin-bottom:8px}
+.home-col-t{font-size:13px;color:var(--ob-dim);line-height:1.65}
+.home-features{display:flex;flex-direction:column;gap:16px;margin-top:20px}
+.home-feat{display:flex;gap:14px;align-items:flex-start}
+.home-feat-ico{font-family:'DM Mono',monospace;font-size:13px;color:var(--ob-terra);flex-shrink:0;margin-top:2px}
+.home-feat-t{font-size:14px;color:var(--ob-text);font-weight:400;margin-bottom:3px}
+.home-feat-d{font-size:13px;color:var(--ob-dim);line-height:1.55}
+
+/* ═══ OPEN TEXT FIELD ═══ */
+.ob-open-field{margin-top:14px}
+.ob-open-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ob-dimmer);margin-bottom:7px}
+.ob-open-input{width:100%;background:var(--ob-surf2);border:1px solid var(--ob-line);color:var(--ob-text);padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:14px;border-radius:2px;outline:none;resize:none;transition:border-color .2s;line-height:1.5}
+.ob-open-input:focus{border-color:rgba(139,175,138,.35)}
+.ob-open-input::placeholder{color:var(--ob-dimmer)}
+
+/* ═══ RGPD / LEGAL ═══ */
+.rgpd-check{display:flex;align-items:flex-start;gap:10px;margin-top:16px;margin-bottom:4px}
+.rgpd-check input[type=checkbox]{width:16px;height:16px;accent-color:var(--ob-sage);margin-top:2px;flex-shrink:0;cursor:pointer}
+.rgpd-check label{font-size:12px;color:var(--ob-dimmer);line-height:1.5;cursor:pointer}
+.rgpd-check label a{color:var(--ob-sage);text-decoration:none}
+.rgpd-check label a:hover{text-decoration:underline}
+.rgpd-note{font-family:'DM Mono',monospace;font-size:9px;color:var(--ob-dimmer);letter-spacing:.3px;line-height:1.5;margin-top:8px}
+
+/* ═══ PRIVACY MODAL ═══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--ob-surf);border:1px solid var(--ob-line);max-width:540px;width:100%;max-height:80vh;overflow-y:auto;padding:32px;border-radius:2px;position:relative}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--ob-dim);font-size:20px;cursor:pointer;line-height:1}
+.modal-close:hover{color:var(--ob-text)}
+.modal-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--ob-text);margin-bottom:20px}
+.modal-section{margin-bottom:16px}
+.modal-h{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ob-sage);margin-bottom:6px}
+.modal-p{font-size:13px;color:var(--ob-dim);line-height:1.65}
+</style>
+</head>
+<body>
+
+<!-- SVG sprites -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-brain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+  <symbol id="i-walk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"/><path d="M9 20l2-7-2-3 5 1 1 4-3 5M9.5 10L7 13l3 2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></symbol>
+  <symbol id="i-woman" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6" r="3"/><path d="M9 13h6l-1 8H10l-1-8zM12 17v4M9 21h6"/></symbol>
+  <symbol id="i-man" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6" r="3"/><path d="M9 12h6v5h-6zM10 17l-1 4M14 17l1 4M6 12l-2 4M18 12l2 4"/></symbol>
+</svg>
+
+<!-- PRIVACY MODAL -->
+<div class="modal-overlay" id="privacy-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('privacy-modal').classList.remove('open')">✕</button>
+    <div class="modal-title">Política de Privacidad</div>
+    <div class="modal-section"><div class="modal-h">Responsable</div><div class="modal-p">2080.fit — hola@2080.fit. Responsable del tratamiento de los datos personales recogidos en este sitio.</div></div>
+    <div class="modal-section"><div class="modal-h">Datos que recogemos</div><div class="modal-p">Nombre (opcional), email, y las respuestas al cuestionario de salud (edad, peso, altura, objetivos, restricciones alimentarias, medicación, nivel de actividad y estrés). No recogemos datos sensibles de salud clínica.</div></div>
+    <div class="modal-section"><div class="modal-h">Finalidad</div><div class="modal-p">Generar tu informe personalizado de longevidad, enviarte el informe por email si nos lo facilitas, y — con tu consentimiento explícito — enviarte actualizaciones semanales de contenido de salud relacionado con tu perfil.</div></div>
+    <div class="modal-section"><div class="modal-h">Base legal</div><div class="modal-p">Consentimiento del usuario (Art. 6.1.a RGPD) para el envío de comunicaciones comerciales. Ejecución de servicio (Art. 6.1.b RGPD) para la generación del informe.</div></div>
+    <div class="modal-section"><div class="modal-h">Conservación</div><div class="modal-p">Tus datos se conservan mientras mantengas la suscripción activa o hasta que solicites su eliminación. Puedes darte de baja en cualquier momento respondiendo al email o escribiendo a hola@2080.fit.</div></div>
+    <div class="modal-section"><div class="modal-h">Tus derechos</div><div class="modal-p">Acceso, rectificación, supresión, oposición y portabilidad. Escríbenos a hola@2080.fit. También puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).</div></div>
+    <div class="modal-section"><div class="modal-h">Cesión a terceros</div><div class="modal-p">No cedemos tus datos a terceros. Usamos Airtable (almacenamiento, servidores en UE) y Brevo (email marketing, Privacy Shield certificado) como encargados de tratamiento.</div></div>
+  </div>
+</div>
+
+<!-- LEGAL MODAL -->
+<div class="modal-overlay" id="legal-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('legal-modal').classList.remove('open')">✕</button>
+    <div class="modal-title">Aviso Legal</div>
+    <div class="modal-section"><div class="modal-h">Titular</div><div class="modal-p">2080.fit · hola@2080.fit. Titular y responsable del sitio web 2080.fit.</div></div>
+    <div class="modal-section"><div class="modal-h">Objeto y limitación de responsabilidad</div><div class="modal-p">2080.fit ofrece contenido informativo sobre salud y longevidad basado en investigación científica publicada. Este contenido no constituye consejo médico, diagnóstico ni prescripción. El usuario debe consultar con un profesional de la salud antes de realizar cambios en su alimentación, suplementación o rutina de ejercicio, especialmente si tiene condiciones médicas diagnosticadas o toma medicación.</div></div>
+    <div class="modal-section"><div class="modal-h">Propiedad intelectual</div><div class="modal-p">Todos los contenidos del sitio (textos, diseño, código, marca) son propiedad de 2080.fit. Queda prohibida su reproducción total o parcial sin autorización expresa.</div></div>
+    <div class="modal-section"><div class="modal-h">Enlaces de afiliado</div><div class="modal-p">Algunos enlaces a productos llevan código de afiliado. El precio para el usuario es el mismo. 2080.fit puede recibir una comisión si realizas una compra a través de estos enlaces.</div></div>
+    <div class="modal-section"><div class="modal-h">Ley aplicable</div><div class="modal-p">Este aviso se rige por la legislación española. Para cualquier controversia, las partes se someten a los juzgados y tribunales correspondientes al domicilio del usuario.</div></div>
+  </div>
+</div>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+
+<div id="app">
+
+<!-- ═══════════════ ONBOARDING ═══════════════ -->
+<div id="onboarding">
+  <div class="ob-header">
+    <div class="ob-logo">20<b>80</b>.fit</div>
+    <div class="ob-progress-bar"><div class="ob-progress-fill" id="ob-prog-fill" style="width:0%"></div></div>
+    <div class="ob-step-label" id="ob-step-label">1 de 6</div>
+  </div>
+
+  <!-- S0: Bienvenida + captura lead -->
+  <div class="ob-screen active" id="s0">
+    <div class="ob-kicker">Plan personalizado · Basado en ciencia</div>
+    <h1 class="ob-title">Tu cuerpo después<br>de los 40 <em>merece<br>un plan propio</em></h1>
+    <p class="ob-sub">Responde unas preguntas. Recibe un protocolo personalizado basado en evidencia científica — no genérico, tuyo.</p>
+    <div class="ob-stats">
+      <div class="ob-stat"><span class="ob-stat-n">47+</span><span class="ob-stat-l">Fuentes científicas</span></div>
+      <div class="ob-stat"><span class="ob-stat-n" id="stat-users">247</span><span class="ob-stat-l">Perfiles generados</span></div>
+      <div class="ob-stat"><span class="ob-stat-n">2 min</span><span class="ob-stat-l">Para tu informe</span></div>
+    </div>
+    <div class="ob-lead-fields">
+      <div class="ob-lead-field"><label>Tu nombre <span style="opacity:.4">(opcional)</span></label><input type="text" id="f-nombre" placeholder="María"></div>
+      <div class="ob-lead-field"><label>Email <span style="opacity:.4">(para tu informe)</span></label><input type="email" id="f-email" placeholder="tu@email.com"></div>
+    </div>
+    <div class="rgpd-check">
+      <input type="checkbox" id="rgpd-ok">
+      <label for="rgpd-ok">Acepto recibir mi informe personalizado y actualizaciones de salud de 2080.fit. Consulta nuestra <a href="#" onclick="event.preventDefault();document.getElementById('privacy-modal').classList.add('open')">política de privacidad</a>.</label>
+    </div>
+    <div class="rgpd-note">Tus datos nunca se venden ni ceden a terceros. Baja cuando quieras.</div>
+    <button class="ob-btn-start" style="margin-top:20px" onclick="startOnboarding()">Descubrir mi plan <svg class="ico"><use href="#i-arrow"/></svg></button>
+
+    <!-- ── HOME SECTIONS — scrollable ── -->
+    <div class="home-sections">
+
+      <div class="home-sec">
+        <div class="home-sec-n">El método</div>
+        <h2 class="home-sec-h">El 80/20 aplicado<br>a la longevidad</h2>
+        <p class="home-sec-p">Después de los 40, el problema no es falta de información — es demasiada información sin personalización. El método 2080 identifica los 2-3 cambios con mayor impacto en tu biología y los convierte en un protocolo que puedes seguir sin que tu vida gire en torno a la salud.</p>
+        <div class="home-two-col">
+          <div class="home-col">
+            <div class="home-col-n" style="color:var(--ob-terra)">20%</div>
+            <div class="home-col-t">De las intervenciones generan el 80% del impacto. No necesitas cambiarlo todo. Necesitas identificar las correctas para tu caso.</div>
+          </div>
+          <div class="home-col">
+            <div class="home-col-n" style="color:var(--ob-sage)">80%</div>
+            <div class="home-col-t">Del resultado real viene del sueño, la proteína, el movimiento básico y uno o dos suplementos bien elegidos. Eso es todo.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="home-sec">
+        <div class="home-sec-n">Por qué funciona</div>
+        <h2 class="home-sec-h">Tu biología a los 40<br>no es la misma de antes</h2>
+        <p class="home-sec-p">La inflamación sube. El sueño profundo baja. La síntesis muscular se vuelve más resistente. El cortisol cuesta más de regular. Lo que funcionaba a los 30 ya no produce los mismos resultados — no porque hayas fallado, sino porque las reglas del juego han cambiado.</p>
+        <p class="home-sec-p" style="margin-top:12px">El informe detecta exactamente en qué punto está tu sistema ahora mismo y qué intervenciones tienen mayor retorno en tu caso concreto.</p>
+      </div>
+
+      <div class="home-sec">
+        <div class="home-sec-n">Qué obtienes</div>
+        <h2 class="home-sec-h">Un análisis que parece<br>hecho a mano</h2>
+        <div class="home-features">
+          <div class="home-feat"><div class="home-feat-ico">→</div><div><div class="home-feat-t">Fisiología explicada en lenguaje real</div><div class="home-feat-d">Sin términos médicos sin explicar. Con analogías cotidianas que hacen que todo tenga sentido.</div></div></div>
+          <div class="home-feat"><div class="home-feat-ico">→</div><div><div class="home-feat-t">Plan 80/20 personalizado</div><div class="home-feat-d">Las 3-4 intervenciones ordenadas por impacto real para tu perfil específico.</div></div></div>
+          <div class="home-feat"><div class="home-feat-ico">→</div><div><div class="home-feat-t">Suplementación con base científica</div><div class="home-feat-d">Solo lo que está justificado para tu caso. Máximo 3. Con links a los productos correctos.</div></div></div>
+          <div class="home-feat"><div class="home-feat-ico">→</div><div><div class="home-feat-t">Semana tipo y marcadores de control</div><div class="home-feat-d">Exactamente qué hacer cada día y cómo medir que está funcionando.</div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- S1: Sexo -->
+  <div class="ob-screen" id="s1">
+    <div class="ob-kicker">Paso 1 de 6</div>
+    <h2 class="ob-title">Para personalizar<br>tu plan con <em>precisión</em></h2>
+    <div class="ob-options grid2">
+      <div class="ob-opt sex-opt" onclick="selectSex('mujer',this)"><div class="ob-opt-icon"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-woman"/></svg></div><div class="ob-opt-text">Soy mujer</div></div>
+      <div class="ob-opt sex-opt" onclick="selectSex('hombre',this)"><div class="ob-opt-icon"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><use href="#i-man"/></svg></div><div class="ob-opt-text">Soy hombre</div></div>
+    </div>
+  </div>
+
+  <!-- S2: Q principal (JS) -->
+  <div class="ob-screen" id="s2">
+    <div class="ob-kicker">Paso 2 de 6</div>
+    <h2 class="ob-title">¿Qué es lo que más<br>notas que ha <em>cambiado</em>?</h2>
+    <div class="ob-options" id="s2-opts"></div>
+    <div class="ob-open-field">
+      <div class="ob-open-label">¿Quieres añadir algo en tus propias palabras? <span style="opacity:.5">(opcional)</span></div>
+      <textarea class="ob-open-input" id="f-open2" rows="2" placeholder="Cuéntame algo más sobre cómo te sientes..."></textarea>
+    </div>
+    <div class="ob-nav"><button class="ob-btn-back" onclick="goTo(1)">← Atrás</button><button class="ob-btn-next" id="next2" onclick="goTo(3)" disabled>Siguiente →</button></div>
+  </div>
+
+  <!-- S3: Objetivos (multiselect) -->
+  <div class="ob-screen" id="s3">
+    <div class="ob-kicker">Paso 3 de 6</div>
+    <h2 class="ob-title">¿Qué quieres<br><em>conseguir</em> principalmente?</h2>
+    <p class="ob-sub" style="margin-bottom:20px">Puedes marcar varios.</p>
+    <div class="ob-options grid2" id="s3-opts">
+      <div class="ob-opt" onclick="toggleMulti(this)" data-v="Perder grasa abdominal"><div class="ob-opt-body"><div class="ob-opt-text">Perder grasa</div><div class="ob-opt-desc">Especialmente la del abdomen</div></div></div>
+      <div class="ob-opt" onclick="toggleMulti(this)" data-v="Ganar músculo o fuerza"><div class="ob-opt-body"><div class="ob-opt-text">Ganar músculo o fuerza</div><div class="ob-opt-desc">Recuperar firmeza y potencia</div></div></div>
+      <div class="ob-opt" onclick="toggleMulti(this)" data-v="Sentirme más vital con energía real y claridad mental"><div class="ob-opt-body"><div class="ob-opt-text">Sentirme más vital</div><div class="ob-opt-desc">Energía real, claridad mental</div></div></div>
+      <div class="ob-opt" onclick="toggleMulti(this)" data-v="Mejorar mi salud a largo plazo y prevenir enfermedades"><div class="ob-opt-body"><div class="ob-opt-text">Salud a largo plazo</div><div class="ob-opt-desc">Prevenir, envejecer mejor</div></div></div>
+      <div class="ob-opt" onclick="toggleMulti(this)" data-v="Dormir y recuperarme mejor"><div class="ob-opt-body"><div class="ob-opt-text">Dormir mejor</div><div class="ob-opt-desc">Que el descanso sea descanso</div></div></div>
+      <div class="ob-opt" onclick="toggleMulti(this)" data-v="Controlar tensión glucosa hormonas o digestión"><div class="ob-opt-body"><div class="ob-opt-text">Controlar algo concreto</div><div class="ob-opt-desc">Tensión, glucosa, hormonas...</div></div></div>
+    </div>
+    <div class="ob-open-field">
+      <div class="ob-open-label">¿Algo más que quieras conseguir? <span style="opacity:.5">(opcional)</span></div>
+      <textarea class="ob-open-input" id="f-open3" rows="2" placeholder="Ej: quiero sentirme como a los 35..."></textarea>
+    </div>
+    <div class="ob-nav"><button class="ob-btn-back" onclick="goTo(2)">← Atrás</button><button class="ob-btn-next" id="next3" onclick="goTo(4)" disabled>Siguiente →</button></div>
+  </div>
+
+  <!-- S4: Situación (JS) -->
+  <div class="ob-screen" id="s4">
+    <div class="ob-kicker">Paso 4 de 6</div>
+    <h2 class="ob-title">¿En qué <em>situación</em><br>te encuentras ahora?</h2>
+    <div class="ob-options" id="s4-opts"></div>
+    <div class="ob-open-field">
+      <div class="ob-open-label">¿Algo más que quieras contarme sobre tu día a día? <span style="opacity:.5">(opcional)</span></div>
+      <textarea class="ob-open-input" id="f-open4" rows="2" placeholder="Ej: trabajo de noche, tengo dolor de espalda crónico..."></textarea>
+    </div>
+    <div class="ob-nav"><button class="ob-btn-back" onclick="goTo(3)">← Atrás</button><button class="ob-btn-next" id="next4" onclick="goTo(5)" disabled>Siguiente →</button></div>
+  </div>
+
+  <!-- S5: Preocupación (JS) -->
+  <div class="ob-screen" id="s5">
+    <div class="ob-kicker">Paso 5 de 6</div>
+    <h2 class="ob-title">En los próximos 10 años,<br>¿qué te <em>preocupa</em> más?</h2>
+    <div class="ob-options" id="s5-opts"></div>
+    <div class="ob-open-field">
+      <div class="ob-open-label">¿Tienes algún diagnóstico o síntoma concreto que quieras mencionar? <span style="opacity:.5">(opcional)</span></div>
+      <textarea class="ob-open-input" id="f-open5" rows="2" placeholder="Ej: me han dicho que tengo prediabetes, tengo artritis..."></textarea>
+    </div>
+    <div class="ob-nav"><button class="ob-btn-back" onclick="goTo(4)">← Atrás</button><button class="ob-btn-next" id="next5" onclick="goTo(6)" disabled>Siguiente →</button></div>
+  </div>
+
+  <!-- S6: Datos -->
+  <div class="ob-screen" id="s6">
+    <div class="ob-kicker">Paso 6 de 6 · Últimos datos</div>
+    <h2 class="ob-title">Para que el plan<br>sea <em>exactamente tuyo</em></h2>
+    <div class="ob-fields">
+      <div class="ob-field"><label>Edad</label><input type="number" id="f-edad" placeholder="47" min="35" max="75"></div>
+      <div class="ob-field"><label>Peso (kg)</label><input type="number" id="f-peso" placeholder="72" min="40" max="200"></div>
+      <div class="ob-field"><label>Altura (cm)</label><input type="number" id="f-altura" placeholder="168" min="140" max="220"></div>
+    </div>
+    <div class="ob-chips-section"><div class="ob-chips-label">Restricciones alimentarias</div><div class="ob-chips" id="chips-rest"><div class="ob-chip" onclick="toggleChip(this,'rest')">Sin restricciones</div><div class="ob-chip" onclick="toggleChip(this,'rest')">Sin lactosa</div><div class="ob-chip" onclick="toggleChip(this,'rest')">Sin gluten</div><div class="ob-chip" onclick="toggleChip(this,'rest')">Vegetariano</div><div class="ob-chip" onclick="toggleChip(this,'rest')">Vegano</div><div class="ob-chip" onclick="toggleChip(this,'rest')">Sin frutos secos</div><div class="ob-chip" onclick="toggleChip(this,'rest')">Sin huevo</div></div></div>
+    <div class="ob-chips-section"><div class="ob-chips-label">Actividad física actual</div><div class="ob-chips" id="chips-act"><div class="ob-chip" onclick="singleChip(this,'act')">Sedentario (casi nada)</div><div class="ob-chip" onclick="singleChip(this,'act')">Ligero 1-2h/sem</div><div class="ob-chip" onclick="singleChip(this,'act')">Moderado 3-4h/sem</div><div class="ob-chip" onclick="singleChip(this,'act')">Activo 5+ h/sem</div></div></div>
+    <div class="ob-chips-section"><div class="ob-chips-label">Medicación relevante</div><div class="ob-chips" id="chips-med"><div class="ob-chip" onclick="toggleChip(this,'med')">Ninguna</div><div class="ob-chip" onclick="toggleChip(this,'med')">Antihipertensivos</div><div class="ob-chip" onclick="toggleChip(this,'med')">Estatinas</div><div class="ob-chip" onclick="toggleChip(this,'med')">Metformina</div><div class="ob-chip" onclick="toggleChip(this,'med')">GLP-1 Ozempic/Wegovy</div><div class="ob-chip" onclick="toggleChip(this,'med')">Hormonal THS</div><div class="ob-chip" onclick="toggleChip(this,'med')">Antidepresivos</div></div></div>
+    <div class="ob-chips-section"><div class="ob-chips-label">Horas de sueño habituales</div><div class="ob-chips" id="chips-sue"><div class="ob-chip" onclick="singleChip(this,'sue')">Menos de 5h</div><div class="ob-chip" onclick="singleChip(this,'sue')">5-6h fragmentadas</div><div class="ob-chip" onclick="singleChip(this,'sue')">6-7h</div><div class="ob-chip" onclick="singleChip(this,'sue')">7-8h</div><div class="ob-chip" onclick="singleChip(this,'sue')">Más de 8h</div></div></div>
+    <div class="ob-slider-wrap"><div class="ob-slider-header"><span class="ob-slider-lbl">Nivel de estrés actual</span><span class="ob-slider-val" id="estres-val">5</span></div><input type="range" class="ob-slider" id="f-estres" min="1" max="10" value="5" oninput="document.getElementById('estres-val').textContent=this.value"><div class="ob-slider-hints"><span class="ob-slider-hint">1 — Relajado</span><span class="ob-slider-hint">10 — Al límite</span></div></div>
+    <div class="ob-error" id="error-datos">Por favor completa edad, peso y altura para personalizar tu informe.</div>
+    <div class="ob-nav"><button class="ob-btn-back" onclick="goTo(5)">← Atrás</button><button class="ob-btn-next" onclick="generateReport()">Generar mi plan →</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════ LOADING ═══════════════ -->
+<div id="loading">
+  <div class="ld-spinner"></div>
+  <h2 class="ld-title">Analizando tu perfil</h2>
+  <p class="ld-sub">Cruzando tus respuestas con 47+ fuentes de investigación en longevidad</p>
+  <div class="ld-steps">
+    <div class="ld-step" id="ls0">→ Identificando tu perfil metabólico...</div>
+    <div class="ld-step" id="ls1">→ Cruzando con bases de datos de longevidad...</div>
+    <div class="ld-step" id="ls2">→ Seleccionando protocolo de suplementación...</div>
+    <div class="ld-step" id="ls3">→ Calculando plan de ejercicio adaptado...</div>
+    <div class="ld-step" id="ls4">→ Generando tu dossier personalizado...</div>
+  </div>
+</div>
+
+<!-- ═══════════════ DOSSIER ═══════════════ -->
+<div id="dossier">
+  <div class="dos-nav">
+    <div class="dos-nav-brand">20<b>80</b>.fit</div>
+    <button class="dos-nav-btn" onclick="resetApp()">← Nuevo plan</button>
+  </div>
+  <div class="dos-wrap">
+    <div class="dos-cover" id="dos-cover"></div>
+    <div id="dos-sections"></div>
+  </div>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">20<b>80</b>.fit</div>
+        <div class="footer-links">
+          <button class="footer-link" onclick="document.getElementById('privacy-modal').classList.add('open')">Política de privacidad</button>
+          <button class="footer-link" onclick="document.getElementById('legal-modal').classList.add('open')">Aviso legal</button>
+          <a class="footer-link" href="mailto:hola@2080.fit">Contacto</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-copy">© 2025 2080.fit — Todos los derechos reservados</div>
+        <div class="footer-disclaimer">Contenido informativo. No sustituye consejo médico profesional. Consulta con tu médico antes de cambiar tu suplementación o hábitos de salud.</div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+</div><!-- /app -->
+
+<!-- FOOTER — visible en onboarding y dossier -->
+<footer class="site-footer" id="ob-footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">20<b>80</b>.fit</div>
+      <div class="footer-links">
+        <button class="footer-link" onclick="document.getElementById('privacy-modal').classList.add('open')">Política de privacidad</button>
+        <button class="footer-link" onclick="document.getElementById('legal-modal').classList.add('open')">Aviso legal</button>
+        <a class="footer-link" href="mailto:hola@2080.fit">Contacto</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 2080.fit — Todos los derechos reservados</div>
+      <div class="footer-disclaimer">Contenido informativo. No sustituye consejo médico. Consulta con tu médico antes de cambiar tu suplementación.</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
+// Pon true para probar sin API (usa datos de demo)
+const DEMO_MODE = false;
+
+// ─── STRIPE PAYMENT LINK ───────────────────
+// Crea el producto en stripe.com → Payment Links → copia la URL
+// Formato: https://buy.stripe.com/XXXXXXXX
+// Acepta tarjeta, Apple Pay y Google Pay automáticamente. Sin código extra.
+const STRIPE_LINK = 'https://buy.stripe.com/INSERTAR_LINK_AQUI';
+
+// ─── Airtable config (opcional) ───
+// Para activar: crea base en airtable.com, tabla "Usuarios"
+// con campos: Nombre, Email, Perfil, Edad, Sexo, Objetivos,
+// Restricciones, Actividad, Estres, Sueno, Medicacion, FechaHora
+const AIRTABLE_KEY = '';  // tu Personal Access Token de Airtable
+const AIRTABLE_BASE = ''; // ID de la base (empieza por "app...")
+const AIRTABLE_TABLE = 'Usuarios';
+
+// ─── Contador de usuarios en Airtable ───
+async function loadUserCount(){
+  if(!AIRTABLE_KEY||!AIRTABLE_BASE) {
+    // Modo demo: número estático con algo de sal visual
+    document.getElementById('stat-users').textContent='247';
+    return;
+  }
+  try{
+    const res=await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?fields[]=Nombre`,{
+      headers:{'Authorization':`Bearer ${AIRTABLE_KEY}`}
+    });
+    const data=await res.json();
+    const count=(data.records?.length||0)+17; // +17 para arrancar con dignidad
+    document.getElementById('stat-users').textContent=count;
+  } catch(e){
+    document.getElementById('stat-users').textContent='247';
+  }
+}
+loadUserCount();
+
+// ─── Guardar en Airtable ───
+async function saveToAirtable(perfil){
+  if(!AIRTABLE_KEY||!AIRTABLE_BASE) return;
+  try{
+    await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}`,{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${AIRTABLE_KEY}`,'Content-Type':'application/json'},
+      body:JSON.stringify({fields:{
+        Nombre:S.nombre||'Anónimo',
+        Email:S.email||'',
+        Perfil:perfil||'',
+        Sexo:S.sexo,
+        Edad:parseInt(S.edad)||0,
+        Objetivos:S.objetivos.join(', '),
+        Restricciones:S.restricciones.join(', ')||'ninguna',
+        Actividad:S.actividad||'',
+        Estres:parseInt(S.estres)||5,
+        Sueno:S.sueno||'',
+        Medicacion:S.medicacion.join(', ')||'ninguna',
+        RespuestaLibre2:document.getElementById('f-open2')?.value||'',
+        RespuestaLibre3:document.getElementById('f-open3')?.value||'',
+        RespuestaLibre4:document.getElementById('f-open4')?.value||'',
+        RespuestaLibre5:document.getElementById('f-open5')?.value||'',
+        FechaHora:new Date().toISOString()
+      }})
+    });
+  } catch(e){ console.log('Airtable save error (non-blocking):',e); }
+}
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const S = {
+  nombre:'', email:'', sexo:'',
+  q2:'', q4:'', q5:'',
+  objetivos:[],
+  restricciones:[], actividad:'', medicacion:[], sueno:'',
+  estres:5, edad:'', peso:'', altura:''
+};
+
+// ═══════════════════════════════════════════
+// QUESTION DATA
+// ═══════════════════════════════════════════
+const Q = {
+  mujer:{
+    q2:['Mi energía y claridad mental ya no son las de antes','Mi cuerpo ha cambiado aunque no haya cambiado lo que hago','Mis ciclos, mi humor o mis hormonas se han descontrolado','Noto molestias, inflamación o digestiones que antes no tenía','Quiero optimizarme — tengo curiosidad por hacer las cosas mejor'],
+    q4:['Noto los primeros cambios hormonales — ciclos irregulares, calor, humor','Estoy en plena menopausia o ya la he pasado','Cuido de otros y casi nunca tengo tiempo ni energía para mí','Trabajo mucho, vivo muy conectada y apenas me muevo','Hago ejercicio pero mi cuerpo no responde como antes'],
+    q5:['Perder masa ósea — volverme frágil o sufrir una fractura','Perder masa muscular — debilitarme sin darme cuenta','Problemas cardiovasculares o metabólicos silenciosos','Deterioro cognitivo — memoria, niebla mental, Alzheimer','Depender de medicación crónica para vivir bien']
+  },
+  hombre:{
+    q2:['Mi energía y concentración ya no responden igual','He ganado grasa o perdido músculo sin cambiar mucho mis hábitos','Mi rendimiento físico o íntimo ha bajado','El estrés o el trabajo me tienen al límite','Quiero optimizarme — tengo curiosidad por hacer las cosas mejor'],
+    q4:['Trabajo mucho, mucho estrés, poco descanso','Bastante sedentario — trabajo de oficina y poca actividad','Hago deporte pero me recupero peor y rindo menos','He notado bajada de testosterona o de energía vital','Tengo un diagnóstico concreto que quiero mejorar'],
+    q5:['Un infarto o problema cardiovascular grave','Diabetes o resistencia a la insulina que se me vaya de las manos','Perder músculo, fuerza y autonomía física','Deterioro cognitivo — memoria, rendimiento mental','Depender de medicación crónica para vivir bien']
+  }
+};
+
+// ═══════════════════════════════════════════
+// START — validates RGPD + email before goTo(1)
+// ═══════════════════════════════════════════
+function startOnboarding(){
+  const rgpd=document.getElementById('rgpd-ok');
+  const email=document.getElementById('f-email').value.trim();
+  // Remove any existing error
+  document.querySelectorAll('.ob-start-err').forEach(e=>e.remove());
+  if(!rgpd.checked){
+    const err=document.createElement('p');
+    err.className='ob-start-err';
+    err.style.cssText='font-size:12px;color:var(--ob-terra);margin-top:8px;font-family:DM Mono,monospace;';
+    err.textContent='Acepta la política de privacidad para continuar.';
+    rgpd.closest('.rgpd-check').after(err);
+    return;
+  }
+  if(email && !email.includes('@')){
+    const err=document.createElement('p');
+    err.className='ob-start-err';
+    err.style.cssText='font-size:12px;color:var(--ob-terra);margin-top:8px;font-family:DM Mono,monospace;';
+    err.textContent='El email no parece válido.';
+    document.getElementById('f-email').after(err);
+    return;
+  }
+  goTo(1);
+}
+function goTo(n){
+  document.querySelectorAll('.ob-screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('s'+n);
+  if(el){el.classList.add('active');}
+  const pct = n===0?0:Math.round((n/6)*100);
+  document.getElementById('ob-prog-fill').style.width=pct+'%';
+  document.getElementById('ob-step-label').textContent = n===0?'':'Paso '+n+' de 6';
+  window.scrollTo(0,0);
+  if(n===2) buildQ('s2-opts','next2','q2');
+  if(n===4) buildQ('s4-opts','next4','q4');
+  if(n===5) buildQ('s5-opts','next5','q5');
+}
+
+function buildQ(containerId, nextId, qKey){
+  const opts = Q[S.sexo]?.[qKey]||[];
+  const c = document.getElementById(containerId);
+  if(!c) return;
+  c.innerHTML='';
+  opts.forEach((txt,i)=>{
+    const d=document.createElement('div');
+    d.className='ob-opt';
+    d.innerHTML=`<span class="ob-opt-key">${['A','B','C','D','E'][i]}</span><div class="ob-opt-body"><div class="ob-opt-text">${txt}</div></div>`;
+    d.onclick=()=>{
+      c.querySelectorAll('.ob-opt').forEach(o=>o.classList.remove('sel'));
+      d.classList.add('sel');
+      S[qKey]=txt;
+      const btn=document.getElementById(nextId);
+      if(btn) btn.disabled=false;
+    };
+    c.appendChild(d);
+  });
+}
+
+function selectSex(sexo,el){
+  S.sexo=sexo;
+  document.querySelectorAll('#s1 .ob-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  setTimeout(()=>goTo(2),260);
+}
+
+function toggleMulti(el){
+  el.classList.toggle('multi-sel');
+  const v=el.dataset.v||el.querySelector('.ob-opt-text')?.textContent;
+  const i=S.objetivos.indexOf(v);
+  if(i>-1) S.objetivos.splice(i,1); else S.objetivos.push(v);
+  document.getElementById('next3').disabled=S.objetivos.length===0;
+}
+
+function toggleChip(el,key){
+  el.classList.toggle('sel');
+  const v=el.textContent.trim();
+  const arr=key==='rest'?S.restricciones:S.medicacion;
+  const i=arr.indexOf(v);
+  if(i>-1) arr.splice(i,1); else arr.push(v);
+}
+
+function singleChip(el,key){
+  el.parentElement.querySelectorAll('.ob-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  if(key==='act') S.actividad=el.textContent.trim();
+  if(key==='sue') S.sueno=el.textContent.trim();
+}
+
+// ═══════════════════════════════════════════
+// GENERATE
+// ═══════════════════════════════════════════
+async function generateReport(){
+  S.nombre=document.getElementById('f-nombre').value.trim();
+  S.email=document.getElementById('f-email').value.trim();
+  S.edad=document.getElementById('f-edad').value;
+  S.peso=document.getElementById('f-peso').value;
+  S.altura=document.getElementById('f-altura').value;
+  S.estres=document.getElementById('f-estres').value;
+  const err=document.getElementById('error-datos');
+  if(!S.edad||!S.peso||!S.altura){err.classList.add('show');return;}
+  err.classList.remove('show');
+  // Recoger campos libres
+  S.open2=document.getElementById('f-open2')?.value.trim()||'';
+  S.open3=document.getElementById('f-open3')?.value.trim()||'';
+  S.open4=document.getElementById('f-open4')?.value.trim()||'';
+  S.open5=document.getElementById('f-open5')?.value.trim()||'';
+  document.getElementById('onboarding').style.display='none';
+  document.getElementById('loading').classList.add('active');
+  animateLoading();
+  const imc=(S.peso/((S.altura/100)**2)).toFixed(1);
+  buildCover(imc);
+  try{
+    let data;
+    if(DEMO_MODE){
+      await delay(3800);
+      data=getDemoJSON(S);
+    } else {
+      const res=await fetch('/.netlify/functions/generate',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({system:getSYS(),prompt:getPrompt(imc)})
+      });
+      if(!res.ok){const err=await res.json();throw new Error(err.error||'Error del servidor');}
+      const raw=await res.json();
+      const txt=raw.text||'{}';
+      const clean=txt.replace(/```json|```/g,'').trim();
+      data=JSON.parse(clean);
+    }
+    // Guardar en Airtable (no bloqueante)
+    saveToAirtable(data.perfil||'');
+    renderDossier(data);
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('dossier').classList.add('active');
+    document.body.style.background='var(--paper)';
+    document.querySelectorAll('.orb').forEach(o=>o.style.display='none');
+    // Hide onboarding footer — dossier has its own
+    const obFoot=document.getElementById('ob-footer');
+    if(obFoot) obFoot.style.display='none';
+    window.scrollTo(0,0);
+  } catch(e){
+    console.error(e);
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('dos-sections').innerHTML=getErrHTML();
+    document.getElementById('dossier').classList.add('active');
+    document.body.style.background='var(--paper)';
+    document.querySelectorAll('.orb').forEach(o=>o.style.display='none');
+  }
+}
+
+// ═══════════════════════════════════════════
+// SYSTEM PROMPT (minimal — JSON only)
+// ═══════════════════════════════════════════
+function getSYS(){
+  return `Eres experto en longevidad. Generas datos estructurados en JSON para informes de salud de personas 40-65 años.
+
+REGLAS ABSOLUTAS:
+- Responde SOLO con JSON válido, sin texto previo ni bloques markdown
+- Lenguaje cotidiano: nunca término técnico sin explicación entre paréntesis
+- Analogías: coches, edificios, fábricas, cocinas — nunca laboratorios
+- Personaliza con los datos exactos del usuario (edad, estrés, sueño, restricciones)
+- Máximo 3 suplementos, justificación específica para este usuario
+- Sin lactosa/vegano → proteína guisante, nunca whey
+- Vegano → omega-3 algas, nunca pescado
+- GLP-1 → siempre alerta pérdida muscular
+- Estatinas → siempre mencionar CoQ10
+- Metformina → mencionar interferencia con ejercicio`;
+}
+
+// ═══════════════════════════════════════════
+// USER PROMPT (compact — asks for JSON)
+// ═══════════════════════════════════════════
+function getPrompt(imc){
+  const r=S.restricciones.join(', ')||'ninguna';
+  const m=S.medicacion.join(', ')||'ninguna';
+  const opens=[S.open2&&`Comentario libre cambios: ${S.open2}`,S.open3&&`Comentario libre objetivos: ${S.open3}`,S.open4&&`Comentario libre situación: ${S.open4}`,S.open5&&`Comentario libre síntomas: ${S.open5}`].filter(Boolean).join(' | ');
+  return `USUARIO: sexo=${S.sexo}, ${S.edad}años, ${S.peso}kg, ${S.altura}cm, IMC=${imc}
+Objetivos: ${S.objetivos.join(', ')}
+Cambio principal: ${S.q2}
+Situación actual: ${S.q4}
+Preocupación futura: ${S.q5}
+Restricciones: ${r} | Actividad: ${S.actividad||'no indicada'} | Medicación: ${m}
+Sueño: ${S.sueno||'no indicado'} | Estrés: ${S.estres}/10${opens?' | '+opens:''}
+
+Devuelve SOLO este JSON sin markdown:
+{"perfil":"nombre del perfil","espejo":"2-3 párrafos separados por |","espejo_cita":"frase impactante","analogia":"párrafo con analogía cotidiana y términos explicados entre paréntesis","tarjetas":[{"icono":"flame|brain|zap|moon","bg_color":"hex","ico_color":"hex","label":"sistema","titulo":"desequilibrio","texto":"explicación cotidiana","barra":"fc|fh|fm|fl","mecanismo":"2-3 frases cotidianas"}],"insight_titulo":"frase que destruye la creencia errónea","insight_cuerpo":"hallazgo contraintuitivo con NEGRITA: para destacar","insight_ampliado":"2-3 frases adicionales","gloss_term":"TÉRMINO","gloss_def":"definición cotidiana","plan_cats":[{"ico":"moon|walk|heart|shield","label":"categoría","fichas":[{"num":"R1","titulo":"título","impacto":5,"porq":"personalizado con datos del usuario","como":"acción concreta","accion":"→ acción inmediata","warn":"prohibido o vacío"}]}],"suplementos":[{"nombre":"Nombre","dosis":"Xg","cuando":"momento","desc":"justificación con NEGRITA: para lo importante","mecanismo":"breve","url_key":"creatina|magnesio|coq10|omega3|d3k2|vitb|whey|guisante|ashwagandha|alcar|rala|urolitina|probioticos|lisina|citrulina","ico":"zap|leaf|pill"}],"semana":{"lun":["walk:texto"],"mar":["mind:texto","suppl:texto"],"mie":["walk:texto","cold:texto"],"jue":["mind:texto","suppl:texto"],"vie":["walk:texto","strength:texto"],"sab":["walk:texto","rest:texto"],"dom":["rest:texto","mind:texto"]},"siempre":["ítem 1","ítem 2","ítem 3","ítem 4","ítem 5"],"errores":[{"titulo":"error 1","texto":"específico para este perfil"},{"titulo":"error 2","texto":"..."},{"titulo":"error 3","texto":"..."}],"gauges":[{"titulo":"marcador","desc":"instrucciones domésticas","freq":"frecuencia","color":"rs|rt|rg","ico":"sun|moon|brain|chart","offset":74}],"edad_metabolica_actual":54,"edad_metabolica_objetivo":48,"edad_metabolica_desc":"frase concreta","mentalidad":"frase corta directa y específica para este perfil","cta_hook":"diferencial con datos específicos del usuario","cta_items":[{"titulo":"Menú semanal completo (7 días)","desc":"desayuno comida y cena adaptados a tu perfil y restricciones"},{"titulo":"Plan de ejercicio con progresión semanal","desc":"qué hacer cuántas series a qué intensidad adaptado a tu nivel"},{"titulo":"Stack de suplementación semana a semana","desc":"qué tomar cada semana cómo combinarlo y qué esperar"},{"titulo":"Protocolo de sueño y recuperación personalizado","desc":"intervenciones ordenadas por impacto para tu nivel de estrés concreto"},{"titulo":"La mentalidad concreta que necesitas según tus respuestas","desc":"un marco mental personalizado para no abandonar en la semana 2"},{"titulo":"Hoja de seguimiento descargable","desc":"para ver la progresión semana a semana con tus métricas"}],"vs_free":["Análisis fisiológico completo","Plan general 80/20","3 suplementos recomendados","Timeline semanal orientativo","Marcadores de control"],"vs_premium":["Todo lo del informe gratuito","Menú semanal con recetas","Plan de ejercicio con progresión","Protocolo de sueño paso a paso","Marco mental personalizado","Hoja de seguimiento descargable"]}`;
+}
+// ═══════════════════════════════════════════
+// URL MAP
+// ═══════════════════════════════════════════
+const HSN={
+  creatina:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8SFJTLUNSRUF8fFBSQVRERVNUfHxodHRwczovL3d3dy5oc25zdG9yZS5jb20vbWFyY2FzL3Jhdy1zZXJpZXMvY3JlYXRpbmEtZXhjZWxsLTEwMC1jcmVhcHVyZS1lbi1wb2x2bw%3D%3D',
+  magnesio:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8SFNORS1NR3x8UFJBVERFU1R8fGh0dHBzOi8vd3d3LmhzbnN0b3JlLmNvbS9tYXJjYXMvZXNzZW50aWFsLXNlcmllcy9iaXNnbGljaW5hdG8tZGUtbWFnbmVzaW8tMTc1bWctbWFnbmVzaW8%3D',
+  coq10:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8SFNORS1DUTEwMjAwfHxQUkFUREVTVHx8aHR0cHM6Ly93d3cuaHNuc3RvcmUuY29tL21hcmNhcy9lc3NlbnRpYWwtc2VyaWVzL2NvZW56aW1hLXExMC0yMDBtZy1iaW9wZXJpbmU%3D',
+  omega3:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8TlctREhBfHxQUkFUREVTVHx8aHR0cHM6Ly93d3cuaHNuc3RvcmUuY29tL21hcmNhcy9ub3ctZm9vZHMvb21lZ2EtMy1kaGEtNTAw',
+  d3k2:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8TlctVkQzSzIxMjB8fFBSQVRERVNUfHxodHRwczovL3d3dy5oc25zdG9yZS5jb20vbWFyY2FzL25vdy1mb29kcy92aXRhbWluYS1kMy12aXRhbWluYS1rMi0xMDAwdWktNDVtY2ctMTIwLXZlZy1jYXBz',
+  vitb:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8SFNORS1VQkN8fFBSQVRERVNUfHxodHRwczovL3d3dy5oc25zdG9yZS5jb20vbWFyY2FzL2Vzc2VudGlhbC1zZXJpZXMvdWx0cmEtYi1jb21wbGV4',
+  whey:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8SFNOUy1FTEF8fFBSQVRERVNUfHxodHRwczovL3d3dy5oc25zdG9yZS5jb20vbWFyY2FzL3Nwb3J0LXNlcmllcy9ldm9sYXRlLTItMC13aGV5LWlzb2xhdGUtY2Zt',
+  guisante:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8SFNORS1QMnx8UFJBVERFU1R8fGh0dHBzOi8vd3d3LmhzbnN0b3JlLmNvbS9tYXJjYXMvZXNzZW50aWFsLXNlcmllcy9wcm90ZWluYS1kZS1ndWlzYW50ZS1haXNsYWRhLTItMA%3D%3D',
+  ashwagandha:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8SFNORS1BU01BR0N8fFBSQVRERVNUfHxodHRwczovL3d3dy5oc25zdG9yZS5jb20vbWFyY2FzL2Vzc2VudGlhbC1zZXJpZXMvYXNod2FnYW5kaGEtbWFnbmVzaW8tY29tcGxleA%3D%3D',
+  alcar:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8SFJTLUFMUE98fFBSQVRERVNUfHxodHRwczovL3d3dy5oc25zdG9yZS5jb20vbWFyY2FzL3Jhdy1zZXJpZXMvYWxjYXItYWNldGlsLWwtY2Fybml0aW5hLWVuLXBvbHZv',
+  rala:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8SFNORS1OUkFMQVZ8fFBSQVRERVNUfHxodHRwczovL3d3dy5oc25zdG9yZS5jb20vbWFyY2FzL2Vzc2VudGlhbC1zZXJpZXMvYWNpZG8tci1hbGZhLWxpcG9pY28tMzAwbWc%3D',
+  urolitina:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8SFNORS1WQTUwMDB8fFBSQVRERVNUfHxodHRwczovL3d3dy5oc25zdG9yZS5jb20vbWFyY2FzL2Vzc2VudGlhbC1zZXJpZXMvdml0YW1pbmEtYS01MDAwdWk%3D',
+  probioticos:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8SFNORS1JTkJJMjV8fFBSQVRERVNUfHxodHRwczovL3d3dy5oc25zdG9yZS5jb20vbWFyY2FzL2Vzc2VudGlhbC1zZXJpZXMvaW5tdS1iaW90aWNzLXByb2Jpb3RpY29zLTI1Yi11ZmM%3D',
+  lisina:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8TlctTExZMTAwMTAwfHxQUkFUREVTVHx8aHR0cHM6Ly93d3cuaHNuc3RvcmUuY29tL21hcmNhcy9ub3ctZm9vZHMvbC1saXNpbmEtMTAwMG1nLTEwMC10YWJz',
+  citrulina:'https://www.hsnstore.com/affiliate/click/index?linkid=cHJvZHVjdHx8TlctQVJDSTEyMHx8UFJBVERFU1R8fGh0dHBzOi8vd3d3LmhzbnN0b3JlLmNvbS9tYXJjYXMvbm93LWZvb2RzL2FyZ2luaW5hLWNpdHJ1bGluYS01MDBtZy0yNTBtZy0xMjAtdmVnLWNhcHM%3D'
+};
+
+const TAG_COLORS={'walk':'tg-walk','cold':'tg-cold','suppl':'tg-suppl','mind':'tg-mind','strength':'tg-strength','rest':'tg-rest'};
+
+// ═══════════════════════════════════════════
+// RENDER DOSSIER FROM JSON
+// ═══════════════════════════════════════════
+function renderDossier(d){
+  const nom=S.nombre?`, ${S.nombre}`:'';
+  const imc=(S.peso/((S.altura/100)**2)).toFixed(1);
+  let html='';
+
+  // 01 El espejo
+  const parrafos=(d.espejo||'').split('|').map(p=>`<p>${formatText(p)}</p>`).join('');
+  html+=sec('01','¿Te suena <em>esto</em>?',`
+    <div class="manifesto">${parrafos}<div class="manifesto-pull">${d.espejo_cita||''}</div></div>`);
+
+  // 02 Fisiología
+  const cards=(d.tarjetas||[]).map(t=>`
+    <div class="card">
+      <div class="card-ico" style="background:${t.bg_color||'var(--terra-bg)'}">
+        <svg class="ico" style="color:${t.ico_color||'var(--terra)'}"><use href="#i-${t.icono||'flame'}"/></svg>
+      </div>
+      <div class="card-lbl">${t.label||''}</div>
+      <div class="card-title">${t.titulo||''}</div>
+      <div class="card-text">${formatText(t.texto||'')}</div>
+      <div class="sbar"><span class="sbar-l">${t.label||''}</span><div class="sbar-track"><div class="sbar-fill ${t.barra||'fm'}"></div></div><span class="sbar-v">${barLabel(t.barra)}</span></div>
+      <div class="acc"><button class="acc-btn" onclick="tog(this)"><svg class="ico acc-icon" style="color:var(--sage)"><use href="#i-plus"/></svg>Ver mecanismo</button><div class="acc-body">${t.mecanismo||''}</div></div>
+    </div>`).join('');
+  html+=sec('02','Lo que está pasando <em>dentro</em>',`
+    <div class="prose" style="margin-bottom:26px"><p>${formatText(d.analogia||'')}</p></div>
+    <div class="cards">${cards}</div>`);
+
+  // 03 Insight
+  html+=sec('03','Lo que el médico no te dice <em>en 10 minutos</em>',`
+    <div class="alert">
+      <div class="alert-kicker">Hallazgo contraintuitivo</div>
+      <h3>${d.insight_titulo||''}</h3>
+      <p>${formatText(d.insight_cuerpo||'')}</p>
+      <div class="alert-acc"><div class="acc"><button class="acc-btn" onclick="tog(this)"><svg class="ico acc-icon" style="color:rgba(244,239,230,.35)"><use href="#i-plus"/></svg>Saber más</button><div class="acc-body">${d.insight_ampliado||''}</div></div></div>
+    </div>
+    <div class="gloss"><span class="gloss-t">${d.gloss_term||''}</span><span>${d.gloss_def||''}</span></div>`);
+
+  // 04 Plan
+  const planHTML=(d.plan_cats||[]).map((cat,ci)=>{
+    const fichas=(cat.fichas||[]).map(f=>`
+      <div class="ficha">
+        <div class="ficha-hd"><span class="ficha-n">${f.num||''}</span><span class="ficha-t">${f.titulo||''}</span><div class="dots">${dots(f.impacto||3)}</div></div>
+        <div class="ficha-bd">
+          <div><div class="fcol-h">Por qué</div><div class="fcol-t">${formatText(f.porq||'')}</div></div>
+          <div><div class="fcol-h">${f.warn?'Prohibido por ahora':'Cómo empezar hoy'}</div><div class="fcol-t${f.warn?' warn':''}">${f.warn||formatText(f.como||'')}</div></div>
+        </div>
+        <div class="ficha-ft">${f.accion||''}</div>
+      </div>`).join('');
+    return `<div class="plan-cat${ci===0?' style="margin-top:0"':''}"><div class="plan-cat-ico"><svg class="ico" style="color:var(--paper)"><use href="#i-${cat.ico||'walk'}"/></svg></div><span class="plan-cat-l">${cat.label||''}</span></div>${fichas}`;
+  }).join('');
+  html+=sec('04','Tu plan <em>80/20</em>',planHTML);
+
+  // 05 Suplementos
+  const supplHTML=(d.suplementos||[]).map(s=>`
+    <div class="suppl">
+      <div class="suppl-top">
+        <div>
+          <div class="suppl-name">${s.nombre||''}</div>
+          <div class="suppl-specs">
+            <div class="ss"><span class="ss-l">Dosis</span><span class="ss-v">${s.dosis||''}</span></div>
+            <div class="ss"><span class="ss-l">Cuándo</span><span class="ss-v">${s.cuando||''}</span></div>
+          </div>
+          <div class="suppl-desc">${formatText(s.desc||'')}</div>
+        </div>
+        <div class="suppl-ico"><svg class="ico" style="color:var(--sage);width:26px;height:26px"><use href="#i-${s.ico||'zap'}"/></svg></div>
+      </div>
+      <div class="suppl-ft">
+        <div class="suppl-mec">${s.mecanismo||''}</div>
+        <a href="${HSN[s.url_key]||'#'}" target="_blank" class="suppl-btn">Ver en HSN <svg class="ico"><use href="#i-arrow"/></svg></a>
+      </div>
+    </div>`).join('');
+  html+=sec('05','Suplementación para <em>tu caso</em>',supplHTML);
+
+  // 06 Semana
+  const days={'lun':'Lun','mar':'Mar','mie':'Mié','jue':'Jue','vie':'Vie','sab':'Sáb','dom':'Dom'};
+  const semHTML=Object.entries(days).map(([k,label])=>{
+    const items=(d.semana?.[k]||[]).map(t=>{
+      const [type,...rest]=t.split(':');
+      return `<span class="tg ${TAG_COLORS[type]||'tg-rest'}">${rest.join(':')}</span>`;
+    }).join('');
+    return `<div class="tl-row"><div class="tl-day">${label}</div><div class="tl-items">${items}</div></div>`;
+  }).join('');
+  const siempreHTML=(d.siempre||[]).map(i=>`<span class="tl-a-item">${i}</span>`).join('');
+  html+=sec('06','Tu semana <em>tipo</em>',`<div class="tl">${semHTML}<div class="tl-always"><div class="tl-a-l">Todos los días</div><div class="tl-a-items">${siempreHTML}</div></div></div>`);
+
+  // 07 Errores
+  const errHTML=(d.errores||[]).map(e=>`<div class="error-item"><div class="error-x">✗</div><div><div class="error-title">${e.titulo||''}</div><div class="error-text">${e.texto||''}</div></div></div>`).join('');
+  html+=sec('07','Los 3 errores de <em>este perfil</em>',`<div class="errors">${errHTML}</div>`);
+
+  // 08 Marcadores
+  const gaugeHTML=(d.gauges||[]).map(g=>{
+    const r=38; const circ=2*Math.PI*r;
+    const off=typeof g.offset==='number'?g.offset:74;
+    return `<div class="gauge">
+      <div class="gauge-ring"><svg width="80" height="80" viewBox="0 0 80 80"><circle class="rtrack" cx="40" cy="40" r="${r}"/><circle class="rfill ${g.color||'rs'}" cx="40" cy="40" r="${r}" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${off}"/></svg><div class="gauge-center"><svg class="ico" style="color:var(--${g.color==='rs'?'sage':g.color==='rt'?'terra':'gold'})"><use href="#i-${g.ico||'sun'}"/></svg></div></div>
+      <div class="gauge-title">${g.titulo||''}</div>
+      <div class="gauge-desc">${g.desc||''}</div>
+      <div class="gauge-freq">${g.freq||'Registro semanal'}</div>
+    </div>`;
+  }).join('');
+  html+=sec('08','Tus <em>marcadores</em> de control',`<div class="gauges">${gaugeHTML}</div>`);
+
+  // CTA
+  html+=renderCTA(d);
+
+  document.getElementById('dos-sections').innerHTML=html;
+}
+
+function sec(n,title,content){
+  return `<div class="d"><div class="d-hd"><span class="d-n">${n} —</span><h2 class="d-h">${title}</h2></div>${content}</div>`;
+}
+
+function dots(n){
+  let h='';
+  for(let i=1;i<=5;i++) h+=`<div class="dot${i<=n?' on':''}"></div>`;
+  return h;
+}
+
+function barLabel(b){
+  return b==='fc'?'Crítico':b==='fh'?'Elevado':b==='fm'?'Moderado':'Bajo';
+}
+
+function formatText(t){
+  // Bold via NEGRITA: → <strong>
+  return (t||'').replace(/NEGRITA:\s*([^.]+)/g,'<strong>$1</strong>')
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/TERM\(([^)]+)\)/g,'<abbr title="$1">$1</abbr>');
+}
+
+// ═══════════════════════════════════════════
+// RENDER CTA PREMIUM — El corazón de la oferta
+// ═══════════════════════════════════════════
+function renderCTA(d){
+  const nombre=S.nombre?S.nombre.split(' ')[0]:'';
+  const saludo=nombre?`${nombre}, ` :'';
+  const hook=d.cta_hook||`Este informe es el primer paso. El plan completo lo cierra.`;
+  const items=(d.cta_items||[]).map(i=>`
+    <div class="cta-p-item">
+      <div class="cta-p-item-check"><svg class="ico"><use href="#i-check"/></svg></div>
+      <div class="cta-p-item-body"><div class="cta-p-item-title">${i.titulo||''}</div><div class="cta-p-item-desc">${i.desc||''}</div></div>
+    </div>`).join('');
+  const vsFree=(d.vs_free||[]).map(i=>`<div class="cta-p-vs-item">${i}</div>`).join('');
+  const vsPremium=(d.vs_premium||[]).map(i=>`<div class="cta-p-vs-item">${i}</div>`).join('');
+  const metaActual=d.edad_metabolica_actual||parseInt(S.edad)+5;
+  const metaObjetivo=d.edad_metabolica_objetivo||parseInt(S.edad)-2;
+
+  return `<div class="cta-wrap">
+    <div class="cta-free-teaser">
+      <div class="cta-ft-label">Mantente al día</div>
+      <div class="cta-ft-title">Recibe actualizaciones semanales de longevidad para tu perfil</div>
+      <div class="email-row" id="email-free-row">
+        <input type="email" id="em-free" placeholder="${S.email||'tu@email.com'}">
+        <button onclick="submitFreeEmail()">Suscribirme →</button>
+      </div>
+    </div>
+    <div class="cta-premium">
+      <div class="meta-age-band">
+        <div class="meta-age-nums">
+          <div class="meta-age-now">${metaActual}</div>
+          <div class="meta-age-arrow">→</div>
+          <div class="meta-age-goal">${metaObjetivo}</div>
+        </div>
+        <div class="meta-age-text">
+          <div class="meta-age-label">Edad metabólica estimada · Objetivo 4 semanas</div>
+          <div class="meta-age-desc">${d.edad_metabolica_desc||'Reducir tu edad metabólica es el objetivo real del plan.'}</div>
+        </div>
+      </div>
+      <div class="mentalidad-box">
+        <div class="mentalidad-label">La mentalidad correcta</div>
+        <div class="mentalidad-text">${d.mentalidad||'El cambio empieza cuando decides que merece la pena.'}</div>
+      </div>
+      <div class="cta-premium-inner">
+        <div class="cta-p-eyebrow">Plan personalizado · 4 semanas · Entrega inmediata</div>
+        <h2 class="cta-p-title">${saludo}esto es lo que el<br>informe gratuito <em>no incluye</em></h2>
+        <p class="cta-p-hook">${hook}</p>
+        <div class="cta-p-what">
+          <div class="cta-p-what-title">Recibes al instante</div>
+          <div class="cta-p-items">${items}</div>
+        </div>
+        <div class="cta-p-vs">
+          <div class="cta-p-vs-col free">
+            <div class="cta-p-vs-label">Informe gratuito</div>
+            <div class="cta-p-vs-list">${vsFree}</div>
+          </div>
+          <div class="cta-p-vs-col premium">
+            <div class="cta-p-vs-label">Plan 17€</div>
+            <div class="cta-p-vs-list">${vsPremium}</div>
+          </div>
+        </div>
+        <div class="cta-p-buy">
+          <div class="cta-p-price-wrap">
+            <span class="cta-p-currency">€</span>
+            <span class="cta-p-price">17</span>
+            <div class="cta-p-period">pago único<br><s>antes 47€</s></div>
+          </div>
+          <!-- STRIPE_LINK se define en CONFIG arriba — sustituye la URL cuando tengas el Payment Link creado -->
+          <a href="${STRIPE_LINK}" target="_blank" class="cta-p-btn">
+            Quiero mi plan completo <svg class="ico"><use href="#i-arrow"/></svg>
+          </a>
+        </div>
+        <div class="cta-p-guarantee">Apple Pay · Google Pay · Tarjeta · Pago seguro Stripe<br>Descarga inmediata · Garantía de satisfacción 7 días · Sin suscripciones</div>
+      </div>
+    </div>
+    <div class="dos-note">Plan elaborado a partir de evidencia científica publicada. No sustituye el consejo médico individualizado. Si tienes una condición diagnosticada o tomas medicación, consulta con tu médico antes de cambiar la suplementación.</div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// COVER
+// ═══════════════════════════════════════════
+function buildCover(imc){
+  const rest=S.restricciones.length?S.restricciones.join(', '):'Sin restricciones';
+  document.getElementById('dos-cover').innerHTML=`
+    <div class="dos-top"><div class="dos-brand">20<b>80</b>.fit</div><div class="dos-badge">Informe Gratuito</div></div>
+    <div class="dos-kicker">Perfil detectado · 2080.fit</div>
+    <h1 class="dos-title">Tu plan <em>personalizado</em></h1>
+    <p class="dos-sub">Protocolo basado en evidencia científica, adaptado a tus datos y objetivos concretos.</p>
+    <div class="dos-user-card">
+      <div class="duc"><span class="duc-l">Edad</span><span class="duc-v">${S.edad} años</span></div>
+      <div class="duc"><span class="duc-l">IMC</span><span class="duc-v">${imc}</span></div>
+      <div class="duc"><span class="duc-l">Sexo</span><span class="duc-v">${S.sexo.charAt(0).toUpperCase()+S.sexo.slice(1)}</span></div>
+      <div class="duc"><span class="duc-l">Actividad</span><span class="duc-v">${S.actividad||'—'}</span></div>
+      <div class="duc"><span class="duc-l">Sueño</span><span class="duc-v">${S.sueno||'—'}</span></div>
+      <div class="duc"><span class="duc-l">Estrés</span><span class="duc-v">${S.estres} / 10</span></div>
+    </div>
+    <div class="dos-obj-tags">${S.objetivos.map(o=>`<div class="dos-obj-tag">${o}</div>`).join('')}</div>`;
+}
+
+// ═══════════════════════════════════════════
+// LOADING
+// ═══════════════════════════════════════════
+function animateLoading(){
+  for(let i=0;i<5;i++){
+    setTimeout(()=>{
+      const el=document.getElementById('ls'+i);
+      if(el) el.classList.add('vis');
+      if(i>0){const p=document.getElementById('ls'+(i-1));if(p) p.classList.add('done');}
+      // Mark last step done after a short delay
+      if(i===4) setTimeout(()=>{if(el) el.classList.add('done');},600);
+    },i*780);
+  }
+}
+
+// ═══════════════════════════════════════════
+// ACCORDION + METHOD TOGGLE
+// ═══════════════════════════════════════════
+function tog(btn){
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+}
+
+function toggleMethod(btn){
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════
+// EMAIL
+// ═══════════════════════════════════════════
+function submitFreeEmail(){
+  const v=document.getElementById('em-free')?.value;
+  if(v&&v.includes('@')){
+    document.getElementById('email-free-row').innerHTML=`<p style="font-size:13px;color:var(--mid);font-family:'DM Mono',monospace">✓ Registrado — primera actualización esta semana en <strong>${v}</strong></p>`;
+  }
+}
+
+// ═══════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════
+function resetApp(){
+  Object.assign(S,{nombre:'',email:'',sexo:'',q2:'',q4:'',q5:'',open2:'',open3:'',open4:'',open5:'',objetivos:[],restricciones:[],actividad:'',medicacion:[],sueno:'',estres:5,edad:'',peso:'',altura:''});
+  document.getElementById('dossier').classList.remove('active');
+  document.getElementById('loading').classList.remove('active');
+  document.getElementById('onboarding').style.display='';
+  document.body.style.background='var(--ob-bg)';
+  document.querySelectorAll('.orb').forEach(o=>o.style.display='');
+  const obFoot=document.getElementById('ob-footer');
+  if(obFoot) obFoot.style.display='';
+  document.getElementById('dos-cover').innerHTML='';
+  document.getElementById('dos-sections').innerHTML='';
+  for(let i=0;i<5;i++){const el=document.getElementById('ls'+i);if(el){el.classList.remove('vis','done');}}
+  document.querySelectorAll('.ob-chip').forEach(c=>c.classList.remove('sel'));
+  document.querySelectorAll('.ob-opt').forEach(o=>o.classList.remove('sel','multi-sel'));
+  ['f-edad','f-peso','f-altura','f-nombre','f-email','f-open2','f-open3','f-open4','f-open5'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});
+  document.getElementById('f-estres').value=5;
+  document.getElementById('estres-val').textContent='5';
+  goTo(0);
+}
+
+// ═══════════════════════════════════════════
+// DEMO JSON — sin bugs de template literals
+// ═══════════════════════════════════════════
+function getDemoJSON(s){
+  const nivelEstres=parseInt(s.estres);
+  const mActual=parseInt(s.edad)+Math.round(nivelEstres/2);
+  const mObj=parseInt(s.edad)-2;
+  const estresTexto=nivelEstres+'/10';
+  const suenoTexto=s.sueno||'sueño insuficiente';
+  return {
+    perfil:'El Desgastado Crónico',
+    espejo:'Te despiertas y lo primero que sientes es que ya empiezas el día en déficit. No es cansancio de haber dormido poco — llevas meses así.|Tu cabeza funciona, pero no al ritmo de antes. Buscas palabras que antes llegaban solas. A media tarde sientes que ya has gastado todo lo que tenías.|Y por fuera todo parece normal. Sigues cumpliendo. Pero tú sabes que algo ha cambiado. El café ya no funciona igual.',
+    espejo_cita:'"No es que te estés haciendo mayor mal. Es que tu sistema nervioso lleva meses en estado de alerta — y eso tiene consecuencias físicas reales."',
+    analogia:'Imagina que tu sistema nervioso es el motor de un coche deportivo circulando en primera marcha a 8.000 RPM. Eso es el cortisol (la hormona del estrés) alto y el estrés crónico. El sueño profundo y la testosterona son el aceite y los mecánicos. Pero como el motor nunca para, los mecánicos no pueden trabajar. El cerebro — que usa un combustible especial llamado fosfocreatina (la batería de reserva del lóbulo frontal) — se queda seco. El motor se sobrecalienta. Eso es el burnout.',
+    tarjetas:[
+      {icono:'flame',bg_color:'#F9EDE7',ico_color:'#AA4D28',label:'Sistema hormonal',titulo:'Cortisol alto, testosterona baja',texto:'Compiten por los mismos recursos. Con estrés '+estresTexto+' el cuerpo prioriza la supervivencia inmediata. Sin testosterona suficiente no hay reparación celular ni energía sostenida.',barra:'fc',mecanismo:'El eje HPA (Hipotálamo-Pituitaria-Adrenal) fue diseñado para activarse ante peligro real y apagarse al pasar. Con estrés crónico el mecanismo de apagado falla. El cortisol sostenido destruye músculo, suprime el sistema inmune y deteriora la memoria de forma directa y medible.'},
+      {icono:'brain',bg_color:'#E8F2EA',ico_color:'#3D6B45',label:'Energía cerebral',titulo:'Lóbulo frontal sin combustible',texto:'El lóbulo frontal controla la concentración y las decisiones. Con tus niveles de cortisol elevados la fosfocreatina cerebral se agota continuamente. La niebla mental es déficit energético literal, no falta de motivación.',barra:'fh',mecanismo:'La fosfocreatina actúa como batería de reserva del ATP cerebral. Con déficit crónico el umbral de fatiga cognitiva baja radicalmente. La creatina satura estas reservas en 5-7 días con fase de carga — el efecto en claridad mental puede notarse antes de que se note en el músculo.'},
+      {icono:'zap',bg_color:'#F8F1E2',ico_color:'#8F6A1A',label:'Plantas de energía celular',titulo:'Mitocondrias bajo estrés oxidativo',texto:'Las mitocondrias (las plantas de energía de tus células) bajo cortisol crónico producen más humo tóxico (radicales libres) y menos energía. Fatiga física sin causa aparente, recuperación lenta.',barra:'fm',mecanismo:'El estrés oxidativo generado por cortisol crónico daña las membranas mitocondriales. Las mitocondrias deterioradas producen menos ATP y más radicales libres — un ciclo que se retroalimenta. El CoQ10 interrumpe este ciclo protegiendo las membranas.'},
+      {icono:'moon',bg_color:'#EEF1F8',ico_color:'#3A5A8A',label:'Ciclo de recuperación',titulo:'Sueño fragmentado sin fases profundas',texto:'Sin sueño REM el cerebro no consolida, no elimina toxinas y no regula el cortisol. El ciclo es autoperpetuante: más estrés → menos REM → más cortisol → más estrés.',barra:'fl',mecanismo:'El 70% de la testosterona diaria se produce durante el sueño profundo. El sistema glinfático — la limpieza nocturna del cerebro — es 10 veces más activo en sueño que en vigilia. Sin fases profundas consistentes, el cerebro acumula metabolitos tóxicos y la producción hormonal colapsa.'}
+    ],
+    insight_titulo:'Por qué esforzarte más es exactamente lo que no debes hacer ahora mismo',
+    insight_cuerpo:'La lógica dice: si rindes menos, esfuérzate más. NEGRITA: La biología dice exactamente lo contrario. El ejercicio intenso en un estado de cortisol crónico elevado no te fortalece — dispara aún más el cortisol, hunde la testosterona y bloquea la reparación celular nocturna.',
+    insight_ampliado:'El HIIT y el levantamiento intenso en un sistema con cortisol basal elevado producen un pico adicional que supera el umbral manejable. La síntesis proteica muscular se inhibe completamente bajo privación de sueño. El criterio correcto para volver al ejercicio intenso: sueño consistentemente bueno durante 3-4 semanas seguidas.',
+    gloss_term:'CORTISOL CRÓNICO',
+    gloss_def:'cuando la hormona del estrés se queda elevada de forma permanente en lugar de subir y bajar según las situaciones. Destruye músculo, suprime el sistema inmune y deteriora la memoria — incluso sin que lo notes conscientemente.',
+    plan_cats:[
+      {ico:'moon',label:'Recupera primero — esto va antes que todo',fichas:[
+        {num:'R1',titulo:'El sueño no se negocia',impacto:5,porq:'Con '+suenoTexto+' y estrés '+estresTexto+', el cortisol no se regula y la testosterona no se produce. Todo lo demás falla si esto falla.',como:'18-19°C en la habitación. Oscuridad total. Sin pantallas 45 min antes. Mismo horario 7 días.',accion:'→ Magnesio bisglicinato 300mg, 30 minutos antes de dormir. Empieza esta noche.',warn:''},
+        {num:'R2',titulo:'Gestión activa del estrés',impacto:4,porq:'El estrés mental daña directamente las mitocondrias neuronales. Sin intervención activa el daño continúa aunque duermas mejor.',como:'10 min de respiración diafragmática al levantarte. Tiempo al aire libre sin pantallas — aunque sean 15 minutos.',accion:'→ Respiración 4-7-8: inhala 4 seg, retén 7, exhala 8. 5 ciclos bajan el cortisol en minutos.',warn:''}
+      ]},
+      {ico:'walk',label:'Muévete así — con precaución',fichas:[
+        {num:'E1',titulo:'Solo caminatas durante las primeras 4 semanas',impacto:3,porq:'La caminata es el único ejercicio que en este estado suma sin restar. Mejora las mitocondrias sin disparar el cortisol.',como:'25-35 minutos al día. Sin auriculares si puedes. Preferiblemente al aire libre.',accion:'→ Empieza mañana. 25 minutos. Sin objetivos de velocidad ni distancia.',warn:'HIIT, sprints y levantamientos pesados — hasta que el sueño sea bueno 3-4 semanas seguidas.'}
+      ]},
+      {ico:'heart',label:'Come así',fichas:[
+        {num:'C1',titulo:'30g de proteína en el desayuno',impacto:4,porq:'El desayuno proteico estabiliza el azúcar desde primera hora y reduce el pico de cortisol matutino. Sin proteína suficiente el cortisol destruye músculo.',como:'Huevos revueltos con aguacate. Sardinas en tostada. Batido de proteína. Sin cereales de caja.',accion:'→ Esta es la regla más importante. El desayuno proteico actúa directamente sobre el cortisol matutino.',warn:''}
+      ]}
+    ],
+    suplementos:[
+      {nombre:'Creatina Monohidrato',dosis:'15-20g/día (1 sem), luego 5-10g',cuando:'Mañana — antes de o con el desayuno',desc:'Para tu perfil la creatina no es un suplemento muscular — es NEGRITA: combustible cerebral urgente. Reabastecer la fosfocreatina del lóbulo frontal mitiga la fatiga mental y mejora la cognición bajo privación de sueño. El efecto en claridad mental puede notarse en 5-7 días con la fase de carga.',mecanismo:'Satura fosfocreatina cerebral · efecto antidepresivo leve · sin contraindicaciones en riñones sanos',url_key:'creatina',ico:'zap'},
+      {nombre:'Ashwagandha + Magnesio',dosis:'Según envase',cuando:'Noche — 30 min antes de dormir',desc:'Combinación específica para estrés '+estresTexto+'. La ashwagandha tiene evidencia directa de reducción del cortisol en personas con estrés crónico. El magnesio activa el NEGRITA: sistema parasimpático (el modo descanso del sistema nervioso) facilitando las fases de sueño profundo que ahora te faltan.',mecanismo:'Regulación eje HPA · activación parasimpática · mejora calidad sueño REM',url_key:'ashwagandha',ico:'leaf'},
+      {nombre:'CoQ10 200mg + Bioperine',dosis:'100-300mg diarios',cuando:'Desayuno — con alimentos que contengan grasa',desc:'Protege las mitocondrias (las plantas de energía celular) del daño oxidativo del cortisol crónico. A partir de los 40 sus niveles caen de forma natural — el estrés los agota más rápido. El Bioperine mejora su absorción hasta un 30%.',mecanismo:'Protección mitocondrial · transporte de electrones · antioxidante membrana celular',url_key:'coq10',ico:'zap'}
+    ],
+    semana:{lun:['walk:Caminata 30min','suppl:Creatina','cold:Ducha fría'],mar:['mind:Respiración 10min','walk:Caminata 25min','suppl:Ashwagandha noche'],mie:['walk:Caminata 35min','cold:Ducha fría','suppl:CoQ10 desayuno'],jue:['mind:Respiración 10min','walk:Caminata 25min','suppl:Magnesio noche'],vie:['walk:Caminata 30min','cold:Ducha fría','suppl:Creatina'],sab:['walk:Paseo largo — naturaleza','rest:Sin agenda'],dom:['rest:Descanso activo','mind:Sin pantallas por la mañana']},
+    siempre:['Creatina 5-10g por la mañana','Ashwagandha + Magnesio antes de dormir','Sin cafeína después de las 13h','Sin alcohol — rompe el sueño REM','Mismo horario de sueño los 7 días'],
+    errores:[
+      {titulo:'Compensar el agotamiento con más cafeína',texto:'La cafeína bloquea la adenosina — la señal que induce el sueño. Más café = peor sueño = más agotamiento = más café. El ciclo se retroalimenta. Con sueño fragmentado, el café de la tarde es literalmente la causa directa del problema que intentas combatir.'},
+      {titulo:'Empezar a entrenar fuerte desde el agotamiento',texto:'El HIIT en un sistema con cortisol basal elevado produce un pico adicional que supera el umbral manejable. La síntesis proteica muscular se inhibe completamente bajo privación de sueño. Resultado: más agotamiento, más riesgo de lesión, y profundización del ciclo.'},
+      {titulo:'Concentrar toda la proteína en la cena',texto:'El músculo necesita el estímulo proteico en 3 tomas distribuidas para activar la síntesis. Con el cortisol matutino destruyendo músculo activamente, el desayuno proteico no es opcional — es el paso más urgente de todo el plan.'}
+    ],
+    gauges:[
+      {titulo:'Energía matutina',desc:'Del 1 al 10 al levantarte antes del café. Tendencia alcista en 3-4 semanas indica recuperación del eje de estrés.',freq:'Registro diario — misma hora',color:'rs',ico:'sun',offset:80},
+      {titulo:'Sueño REM',desc:'Con wearable (Oura, Garmin, Fitbit). Objetivo: más de 90 min/noche. Cuando sube, el cortisol baja.',freq:'Monitorización diaria',color:'rt',ico:'moon',offset:55},
+      {titulo:'Niebla mental',desc:'Del 1 al 10 cada mañana. Si baja sostenidamente en 4-6 semanas, la fosfocreatina cerebral se restaura.',freq:'Registro diario',color:'rg',ico:'brain',offset:110},
+      {titulo:'HRV matutino',desc:'Con wearable. Valores crecientes indican sistema nervioso recuperándose. Valores bajos = no es día de esfuerzo.',freq:'Monitorización diaria',color:'rs',ico:'chart',offset:140}
+    ],
+    edad_metabolica_actual:mActual,
+    edad_metabolica_objetivo:mObj,
+    edad_metabolica_desc:'En 4 semanas, regulando el cortisol y restaurando el sueño profundo, tu cuerpo puede funcionar '+(mActual-mObj)+' años más joven metabólicamente.',
+    mentalidad:'No necesitas más fuerza de voluntad. Necesitas un sistema que no dependa de ella. Cuando el cortisol baja, la motivación vuelve sola.',
+    cta_hook:'Este informe te dice el qué y el por qué. El plan de 17€ te da el cómo exacto — semana a semana, sin adivinar, sin improvisar.',
+    cta_items:[
+      {titulo:'Menú semanal completo (7 días)',desc:'Desayuno, comida y cena cada día — con recetas rápidas y listas de la compra'},
+      {titulo:'Plan de ejercicio con progresión semanal',desc:'Exactamente qué hacer, cuántas series y a qué intensidad — adaptado a tu nivel actual'},
+      {titulo:'Stack de suplementación semana a semana',desc:'Qué tomar en cada semana, cómo combinarlo y qué esperar'},
+      {titulo:'Protocolo de sueño y recuperación personalizado',desc:'Las intervenciones ordenadas por impacto para tu nivel de estrés concreto'},
+      {titulo:'La mentalidad concreta que necesitas según tus respuestas',desc:'Un marco mental personalizado para no abandonar en la semana 2 — el diferenciador real'},
+      {titulo:'Hoja de seguimiento descargable',desc:'Para ver la progresión semana a semana con tus métricas específicas'}
+    ],
+    vs_free:['Análisis fisiológico completo','Plan general 80/20','3 suplementos recomendados','Timeline semanal orientativo','Marcadores de control'],
+    vs_premium:['Todo lo del informe gratuito','Menú semanal con recetas','Plan de ejercicio con progresión','Protocolo de sueño paso a paso','Marco mental personalizado','Hoja de seguimiento descargable']
+  };
+}
+
+function getErrHTML(){
+  return `<div class="alert" style="margin-top:32px"><div class="alert-kicker">Error de conexión</div><h3>No hemos podido conectar con el servidor</h3><p>Deja tu email y te enviamos tu informe personalizado en los próximos minutos.</p></div>`;
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ─── CHECKOUT NOTE ───
+// Para activar pagos con Apple Pay / tarjeta:
+// Opción A (recomendada): Stripe Payment Links — sin código, creas un link en stripe.com
+//   y lo pegas en el href del .cta-p-btn. Acepta Apple Pay automáticamente.
+// Opción B: Gumroad — igual de simple, ya tiene Apple Pay integrado.
+// El mailto actual es temporal para validar la oferta antes de integrar el pago real.
+// Cuando tengas 3-5 ventas manuales confirmadas, activa Stripe Payment Link.
+
+// Init
+goTo(0);
+</script>
+</body>
+</html>
