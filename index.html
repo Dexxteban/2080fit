@@ -100,7 +100,7 @@ body{background:var(--ob-bg);color:var(--ob-text);font-family:'DM Sans',sans-ser
 .ob-chip.sel{background:rgba(139,175,138,.1);border-color:var(--ob-sage);color:var(--ob-sage)}
 
 /* Fields */
-.ob-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:22px}
+.ob-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
 @media(max-width:480px){.ob-fields{grid-template-columns:1fr}}
 .ob-field{display:flex;flex-direction:column;gap:6px}
 .ob-field label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ob-dim)}
@@ -449,6 +449,33 @@ abbr{text-decoration:underline dotted var(--terra);cursor:help;color:var(--dark)
 .modal-section{margin-bottom:16px}
 .modal-h{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ob-sage);margin-bottom:6px}
 .modal-p{font-size:13px;color:var(--ob-dim);line-height:1.65}
+
+/* ═══ HERO COVER ═══ */
+.dos-hero{margin:0 -24px;min-height:420px;display:flex;flex-direction:column;background-size:cover;background-position:center top;position:relative}
+.dos-hero-inner{position:relative;z-index:2;max-width:720px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;min-height:420px}
+.dos-hero .dos-top{padding:28px 0 0;margin-bottom:0}
+.dos-hero .dos-brand{color:rgba(244,239,230,.7)}
+.dos-hero-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:28px 0 36px}
+.dos-hero .dos-kicker{color:var(--ob-sage);margin-bottom:12px}
+.dos-hero .dos-kicker::before{background:var(--ob-sage)}
+.dos-hero .dos-title{color:var(--cream);margin-bottom:6px}
+.dos-hero-sep{width:40px;height:1px;background:rgba(255,255,255,.2);margin:18px 0}
+.dos-hero-meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.dos-hero-meta-now{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;color:var(--ob-terra);line-height:1}
+.dos-hero-meta-arrow{color:rgba(244,239,230,.3);font-size:20px}
+.dos-hero-meta-goal{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;color:var(--ob-sage);line-height:1}
+.dos-hero-meta-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(244,239,230,.35);margin:8px 0 16px}
+.dos-hero .dos-obj-tags{margin:0}
+.dos-hero .dos-obj-tag{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:rgba(244,239,230,.55)}
+.dos-cover-below{padding:28px 0 52px;border-bottom:1px solid var(--line);margin-bottom:64px}
+.dos-user-card-compact{background:var(--cream);border:1px solid var(--line);padding:14px 18px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:520px){.dos-user-card-compact{grid-template-columns:repeat(2,1fr)}}
+
+/* ═══ SHARE BUTTON ═══ */
+.share-wrap{margin-bottom:2px}
+.share-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:transparent;border:1px solid var(--sage);color:var(--sage);padding:15px 24px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.share-btn:hover{background:var(--sage);color:var(--paper)}
+.share-confirm{text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:var(--sage);padding:8px;letter-spacing:1px;min-height:26px}
 </style>
 </head>
 <body>
@@ -467,6 +494,7 @@ abbr{text-decoration:underline dotted var(--terra);cursor:help;color:var(--dark)
   <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
   <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></symbol>
   <symbol id="i-woman" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6" r="3"/><path d="M9 13h6l-1 8H10l-1-8zM12 17v4M9 21h6"/></symbol>
   <symbol id="i-man" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6" r="3"/><path d="M9 12h6v5h-6zM10 17l-1 4M14 17l1 4M6 12l-2 4M18 12l2 4"/></symbol>
 </svg>
@@ -514,13 +542,13 @@ abbr{text-decoration:underline dotted var(--terra);cursor:help;color:var(--dark)
 
   <!-- S0: Bienvenida + captura lead -->
   <div class="ob-screen active" id="s0">
-    <div class="ob-kicker">Plan personalizado · Basado en ciencia</div>
+    <div class="ob-kicker">Descubre tu edad metabólica real</div>
     <h1 class="ob-title">Tu cuerpo después<br>de los 40 <em>merece<br>un plan propio</em></h1>
-    <p class="ob-sub">Responde unas preguntas. Recibe un protocolo personalizado basado en evidencia científica — no genérico, tuyo.</p>
+    <p class="ob-sub">La mayoría de personas de 40-65 años tienen una edad metabólica 6-12 años mayor que la cronológica. Descubre la tuya y cómo reducirla en 4 semanas.</p>
     <div class="ob-stats">
       <div class="ob-stat"><span class="ob-stat-n">47+</span><span class="ob-stat-l">Fuentes científicas</span></div>
       <div class="ob-stat"><span class="ob-stat-n" id="stat-users">247</span><span class="ob-stat-l">Perfiles generados</span></div>
-      <div class="ob-stat"><span class="ob-stat-n">2 min</span><span class="ob-stat-l">Para tu informe</span></div>
+      <div class="ob-stat"><span class="ob-stat-n" style="font-size:15px;line-height:1.3;color:var(--ob-terra)">¿Cuántos años<br>tiene tu cuerpo?</span><span class="ob-stat-l" style="text-transform:none;letter-spacing:.3px;font-size:8px">Descúbrelo en 2 minutos</span></div>
     </div>
     <div class="ob-lead-fields">
       <div class="ob-lead-field"><label>Tu nombre <span style="opacity:.4">(opcional)</span></label><input type="text" id="f-nombre" placeholder="María"></div>
@@ -647,6 +675,7 @@ abbr{text-decoration:underline dotted var(--terra);cursor:help;color:var(--dark)
       <div class="ob-field"><label>Edad</label><input type="number" id="f-edad" placeholder="47" min="35" max="75"></div>
       <div class="ob-field"><label>Peso (kg)</label><input type="number" id="f-peso" placeholder="72" min="40" max="200"></div>
       <div class="ob-field"><label>Altura (cm)</label><input type="number" id="f-altura" placeholder="168" min="140" max="220"></div>
+      <div class="ob-field"><label>Cintura (cm) <span style="opacity:.4">(opcional)</span></label><input type="number" id="f-cintura" placeholder="94" min="50" max="180"></div>
     </div>
     <div class="ob-chips-section"><div class="ob-chips-label">Restricciones alimentarias</div><div class="ob-chips" id="chips-rest"><div class="ob-chip" onclick="toggleChip(this,'rest')">Sin restricciones</div><div class="ob-chip" onclick="toggleChip(this,'rest')">Sin lactosa</div><div class="ob-chip" onclick="toggleChip(this,'rest')">Sin gluten</div><div class="ob-chip" onclick="toggleChip(this,'rest')">Vegetariano</div><div class="ob-chip" onclick="toggleChip(this,'rest')">Vegano</div><div class="ob-chip" onclick="toggleChip(this,'rest')">Sin frutos secos</div><div class="ob-chip" onclick="toggleChip(this,'rest')">Sin huevo</div></div></div>
     <div class="ob-chips-section"><div class="ob-chips-label">Actividad física actual</div><div class="ob-chips" id="chips-act"><div class="ob-chip" onclick="singleChip(this,'act')">Sedentario (casi nada)</div><div class="ob-chip" onclick="singleChip(this,'act')">Ligero 1-2h/sem</div><div class="ob-chip" onclick="singleChip(this,'act')">Moderado 3-4h/sem</div><div class="ob-chip" onclick="singleChip(this,'act')">Activo 5+ h/sem</div></div></div>
@@ -733,62 +762,12 @@ const DEMO_MODE = false;
 // Acepta tarjeta, Apple Pay y Google Pay automáticamente. Sin código extra.
 const STRIPE_LINK = 'https://buy.stripe.com/INSERTAR_LINK_AQUI';
 
-// ─── Airtable config (opcional) ───
-// Para activar: crea base en airtable.com, tabla "Usuarios"
-// con campos: Nombre, Email, Perfil, Edad, Sexo, Objetivos,
-// Restricciones, Actividad, Estres, Sueno, Medicacion, FechaHora
-const AIRTABLE_KEY = '';  // tu Personal Access Token de Airtable
-const AIRTABLE_BASE = ''; // ID de la base (empieza por "app...")
-const AIRTABLE_TABLE = 'Usuarios';
-
-// ─── Contador de usuarios en Airtable ───
-async function loadUserCount(){
-  if(!AIRTABLE_KEY||!AIRTABLE_BASE) {
-    // Modo demo: número estático con algo de sal visual
-    document.getElementById('stat-users').textContent='247';
-    return;
-  }
-  try{
-    const res=await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?fields[]=Nombre`,{
-      headers:{'Authorization':`Bearer ${AIRTABLE_KEY}`}
-    });
-    const data=await res.json();
-    const count=(data.records?.length||0)+17; // +17 para arrancar con dignidad
-    document.getElementById('stat-users').textContent=count;
-  } catch(e){
-    document.getElementById('stat-users').textContent='247';
-  }
+// Airtable movido al backend (netlify/functions/generate.js)
+// El contador muestra número estático hasta que conectemos Airtable read vía función
+function loadUserCount(){
+  document.getElementById('stat-users').textContent='247';
 }
 loadUserCount();
-
-// ─── Guardar en Airtable ───
-async function saveToAirtable(perfil){
-  if(!AIRTABLE_KEY||!AIRTABLE_BASE) return;
-  try{
-    await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}`,{
-      method:'POST',
-      headers:{'Authorization':`Bearer ${AIRTABLE_KEY}`,'Content-Type':'application/json'},
-      body:JSON.stringify({fields:{
-        Nombre:S.nombre||'Anónimo',
-        Email:S.email||'',
-        Perfil:perfil||'',
-        Sexo:S.sexo,
-        Edad:parseInt(S.edad)||0,
-        Objetivos:S.objetivos.join(', '),
-        Restricciones:S.restricciones.join(', ')||'ninguna',
-        Actividad:S.actividad||'',
-        Estres:parseInt(S.estres)||5,
-        Sueno:S.sueno||'',
-        Medicacion:S.medicacion.join(', ')||'ninguna',
-        RespuestaLibre2:document.getElementById('f-open2')?.value||'',
-        RespuestaLibre3:document.getElementById('f-open3')?.value||'',
-        RespuestaLibre4:document.getElementById('f-open4')?.value||'',
-        RespuestaLibre5:document.getElementById('f-open5')?.value||'',
-        FechaHora:new Date().toISOString()
-      }})
-    });
-  } catch(e){ console.log('Airtable save error (non-blocking):',e); }
-}
 
 // ═══════════════════════════════════════════
 // STATE
@@ -798,8 +777,33 @@ const S = {
   q2:'', q4:'', q5:'',
   objetivos:[],
   restricciones:[], actividad:'', medicacion:[], sueno:'',
-  estres:5, edad:'', peso:'', altura:''
+  estres:5, edad:'', peso:'', altura:'', cintura:''
 };
+
+function calcEdadMetabolica(s) {
+  let score = parseInt(s.edad);
+  const cintura = parseInt(s.cintura) || 0;
+  const imc = s.peso / ((s.altura/100)**2);
+  if (s.sexo === 'hombre') {
+    if (cintura > 102) score += 10;
+    else if (cintura > 94) score += 5;
+  } else {
+    if (cintura > 88) score += 8;
+    else if (cintura > 80) score += 5;
+  }
+  if (imc > 30) score += 5;
+  else if (imc > 25) score += 2;
+  if (s.sueno && s.sueno.includes('5-6')) score += 4;
+  else if (s.sueno && s.sueno.includes('6-7')) score += 2;
+  else if (s.sueno && s.sueno.includes('Menos')) score += 6;
+  const estres = parseInt(s.estres);
+  if (estres >= 8) score += 5;
+  else if (estres >= 6) score += 3;
+  if (s.actividad && s.actividad.includes('Sedentario')) score += 4;
+  else if (s.actividad && s.actividad.includes('Ligero')) score += 2;
+  else if (s.actividad && s.actividad.includes('Activo')) score -= 3;
+  return { actual: score, objetivo: score - 5, diferencia: 5 };
+}
 
 // ═══════════════════════════════════════════
 // QUESTION DATA
@@ -909,26 +913,38 @@ function singleChip(el,key){
 // ═══════════════════════════════════════════
 // GENERATE
 // ═══════════════════════════════════════════
-async function generateReport(){
-  S.nombre=document.getElementById('f-nombre').value.trim();
-  S.email=document.getElementById('f-email').value.trim();
-  S.edad=document.getElementById('f-edad').value;
-  S.peso=document.getElementById('f-peso').value;
-  S.altura=document.getElementById('f-altura').value;
-  S.estres=document.getElementById('f-estres').value;
-  const err=document.getElementById('error-datos');
-  if(!S.edad||!S.peso||!S.altura){err.classList.add('show');return;}
-  err.classList.remove('show');
-  // Recoger campos libres
-  S.open2=document.getElementById('f-open2')?.value.trim()||'';
-  S.open3=document.getElementById('f-open3')?.value.trim()||'';
-  S.open4=document.getElementById('f-open4')?.value.trim()||'';
-  S.open5=document.getElementById('f-open5')?.value.trim()||'';
+async function generateReport(isPro=false){
+  if(!isPro){
+    S.nombre=document.getElementById('f-nombre').value.trim();
+    S.email=document.getElementById('f-email').value.trim();
+    S.edad=document.getElementById('f-edad').value;
+    S.peso=document.getElementById('f-peso').value;
+    S.altura=document.getElementById('f-altura').value;
+    S.estres=document.getElementById('f-estres').value;
+    S.cintura=document.getElementById('f-cintura')?.value||'';
+    const err=document.getElementById('error-datos');
+    if(!S.edad||!S.peso||!S.altura){err.classList.add('show');return;}
+    err.classList.remove('show');
+    S.open2=document.getElementById('f-open2')?.value.trim()||'';
+    S.open3=document.getElementById('f-open3')?.value.trim()||'';
+    S.open4=document.getElementById('f-open4')?.value.trim()||'';
+    S.open5=document.getElementById('f-open5')?.value.trim()||'';
+  }
   document.getElementById('onboarding').style.display='none';
   document.getElementById('loading').classList.add('active');
   animateLoading();
   const imc=(S.peso/((S.altura/100)**2)).toFixed(1);
-  buildCover(imc);
+  const edadMeta=calcEdadMetabolica(S);
+  buildCover(imc,edadMeta);
+  const userData={
+    nombre:S.nombre, email:S.email, sexo:S.sexo,
+    edad:S.edad, peso:S.peso, altura:S.altura, cintura:S.cintura,
+    objetivos:S.objetivos.join(', '),
+    restricciones:S.restricciones.join(', ')||'ninguna',
+    actividad:S.actividad, estres:S.estres, sueno:S.sueno,
+    medicacion:S.medicacion.join(', ')||'ninguna',
+    open2:S.open2, open3:S.open3, open4:S.open4, open5:S.open5
+  };
   try{
     let data;
     if(DEMO_MODE){
@@ -938,22 +954,35 @@ async function generateReport(){
       const res=await fetch('/.netlify/functions/generate',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({system:getSYS(),prompt:getPrompt(imc)})
+        body:JSON.stringify({prompt:getPrompt(imc,edadMeta),userData,isPro})
       });
-      if(!res.ok){const err=await res.json();throw new Error(err.error||'Error del servidor');}
+      if(!res.ok){const e=await res.json();throw new Error(e.error||'Error del servidor');}
       const raw=await res.json();
       const txt=raw.text||'{}';
       const clean=txt.replace(/```json|```/g,'').trim();
       data=JSON.parse(clean);
     }
-    // Guardar en Airtable (no bloqueante)
-    saveToAirtable(data.perfil||'');
+    // localStorage
+    try{
+      localStorage.setItem('2080fit_session',JSON.stringify({
+        nombre:S.nombre,email:S.email,sexo:S.sexo,
+        edad:S.edad,peso:S.peso,altura:S.altura,cintura:S.cintura,
+        objetivos:S.objetivos,restricciones:S.restricciones,
+        actividad:S.actividad,medicacion:S.medicacion,
+        sueno:S.sueno,estres:S.estres,
+        q2:S.q2,q4:S.q4,q5:S.q5,
+        open2:S.open2,open3:S.open3,open4:S.open4,open5:S.open5,
+        perfil_detectado:data.perfil,
+        edad_metabolica_actual:edadMeta.actual,
+        edad_metabolica_objetivo:edadMeta.objetivo,
+        fecha:new Date().toISOString()
+      }));
+    }catch(e){console.warn('localStorage unavailable');}
     renderDossier(data);
     document.getElementById('loading').classList.remove('active');
     document.getElementById('dossier').classList.add('active');
     document.body.style.background='var(--paper)';
     document.querySelectorAll('.orb').forEach(o=>o.style.display='none');
-    // Hide onboarding footer — dossier has its own
     const obFoot=document.getElementById('ob-footer');
     if(obFoot) obFoot.style.display='none';
     window.scrollTo(0,0);
@@ -968,32 +997,15 @@ async function generateReport(){
 }
 
 // ═══════════════════════════════════════════
-// SYSTEM PROMPT (minimal — JSON only)
+// USER PROMPT (el system prompt está en generate.js)
 // ═══════════════════════════════════════════
-function getSYS(){
-  return `Eres experto en longevidad. Generas datos estructurados en JSON para informes de salud de personas 40-65 años.
-
-REGLAS ABSOLUTAS:
-- Responde SOLO con JSON válido, sin texto previo ni bloques markdown
-- Lenguaje cotidiano: nunca término técnico sin explicación entre paréntesis
-- Analogías: coches, edificios, fábricas, cocinas — nunca laboratorios
-- Personaliza con los datos exactos del usuario (edad, estrés, sueño, restricciones)
-- Máximo 3 suplementos, justificación específica para este usuario
-- Sin lactosa/vegano → proteína guisante, nunca whey
-- Vegano → omega-3 algas, nunca pescado
-- GLP-1 → siempre alerta pérdida muscular
-- Estatinas → siempre mencionar CoQ10
-- Metformina → mencionar interferencia con ejercicio`;
-}
-
-// ═══════════════════════════════════════════
-// USER PROMPT (compact — asks for JSON)
-// ═══════════════════════════════════════════
-function getPrompt(imc){
+function getPrompt(imc, edadMeta){
   const r=S.restricciones.join(', ')||'ninguna';
   const m=S.medicacion.join(', ')||'ninguna';
   const opens=[S.open2&&`Comentario libre cambios: ${S.open2}`,S.open3&&`Comentario libre objetivos: ${S.open3}`,S.open4&&`Comentario libre situación: ${S.open4}`,S.open5&&`Comentario libre síntomas: ${S.open5}`].filter(Boolean).join(' | ');
-  return `USUARIO: sexo=${S.sexo}, ${S.edad}años, ${S.peso}kg, ${S.altura}cm, IMC=${imc}
+  const cinturaStr=S.cintura?`cintura=${S.cintura}cm`:'cintura=no indicada';
+  return `USUARIO: sexo=${S.sexo}, ${S.edad}años, ${S.peso}kg, ${S.altura}cm, IMC=${imc}, ${cinturaStr}
+Edad metabólica calculada: actual=${edadMeta.actual} → objetivo=${edadMeta.objetivo} (usa EXACTAMENTE estos valores en el JSON)
 Objetivos: ${S.objetivos.join(', ')}
 Cambio principal: ${S.q2}
 Situación actual: ${S.q4}
@@ -1002,7 +1014,7 @@ Restricciones: ${r} | Actividad: ${S.actividad||'no indicada'} | Medicación: ${
 Sueño: ${S.sueno||'no indicado'} | Estrés: ${S.estres}/10${opens?' | '+opens:''}
 
 Devuelve SOLO este JSON sin markdown:
-{"perfil":"nombre del perfil","espejo":"2-3 párrafos separados por |","espejo_cita":"frase impactante","analogia":"párrafo con analogía cotidiana y términos explicados entre paréntesis","tarjetas":[{"icono":"flame|brain|zap|moon","bg_color":"hex","ico_color":"hex","label":"sistema","titulo":"desequilibrio","texto":"explicación cotidiana","barra":"fc|fh|fm|fl","mecanismo":"2-3 frases cotidianas"}],"insight_titulo":"frase que destruye la creencia errónea","insight_cuerpo":"hallazgo contraintuitivo con NEGRITA: para destacar","insight_ampliado":"2-3 frases adicionales","gloss_term":"TÉRMINO","gloss_def":"definición cotidiana","plan_cats":[{"ico":"moon|walk|heart|shield","label":"categoría","fichas":[{"num":"R1","titulo":"título","impacto":5,"porq":"personalizado con datos del usuario","como":"acción concreta","accion":"→ acción inmediata","warn":"prohibido o vacío"}]}],"suplementos":[{"nombre":"Nombre","dosis":"Xg","cuando":"momento","desc":"justificación con NEGRITA: para lo importante","mecanismo":"breve","url_key":"creatina|magnesio|coq10|omega3|d3k2|vitb|whey|guisante|ashwagandha|alcar|rala|urolitina|probioticos|lisina|citrulina","ico":"zap|leaf|pill"}],"semana":{"lun":["walk:texto"],"mar":["mind:texto","suppl:texto"],"mie":["walk:texto","cold:texto"],"jue":["mind:texto","suppl:texto"],"vie":["walk:texto","strength:texto"],"sab":["walk:texto","rest:texto"],"dom":["rest:texto","mind:texto"]},"siempre":["ítem 1","ítem 2","ítem 3","ítem 4","ítem 5"],"errores":[{"titulo":"error 1","texto":"específico para este perfil"},{"titulo":"error 2","texto":"..."},{"titulo":"error 3","texto":"..."}],"gauges":[{"titulo":"marcador","desc":"instrucciones domésticas","freq":"frecuencia","color":"rs|rt|rg","ico":"sun|moon|brain|chart","offset":74}],"edad_metabolica_actual":54,"edad_metabolica_objetivo":48,"edad_metabolica_desc":"frase concreta","mentalidad":"frase corta directa y específica para este perfil","cta_hook":"diferencial con datos específicos del usuario","cta_items":[{"titulo":"Menú semanal completo (7 días)","desc":"desayuno comida y cena adaptados a tu perfil y restricciones"},{"titulo":"Plan de ejercicio con progresión semanal","desc":"qué hacer cuántas series a qué intensidad adaptado a tu nivel"},{"titulo":"Stack de suplementación semana a semana","desc":"qué tomar cada semana cómo combinarlo y qué esperar"},{"titulo":"Protocolo de sueño y recuperación personalizado","desc":"intervenciones ordenadas por impacto para tu nivel de estrés concreto"},{"titulo":"La mentalidad concreta que necesitas según tus respuestas","desc":"un marco mental personalizado para no abandonar en la semana 2"},{"titulo":"Hoja de seguimiento descargable","desc":"para ver la progresión semana a semana con tus métricas"}],"vs_free":["Análisis fisiológico completo","Plan general 80/20","3 suplementos recomendados","Timeline semanal orientativo","Marcadores de control"],"vs_premium":["Todo lo del informe gratuito","Menú semanal con recetas","Plan de ejercicio con progresión","Protocolo de sueño paso a paso","Marco mental personalizado","Hoja de seguimiento descargable"]}`;
+{"perfil":"nombre del perfil","espejo":"2-3 párrafos separados por |","espejo_cita":"frase impactante","analogia":"párrafo con analogía cotidiana y términos explicados entre paréntesis","tarjetas":[{"icono":"flame|brain|zap|moon","bg_color":"hex","ico_color":"hex","label":"sistema","titulo":"desequilibrio","texto":"explicación cotidiana","barra":"fc|fh|fm|fl","mecanismo":"2-3 frases cotidianas"}],"insight_titulo":"frase que destruye la creencia errónea","insight_cuerpo":"hallazgo contraintuitivo con NEGRITA: para destacar","insight_ampliado":"2-3 frases adicionales","gloss_term":"TÉRMINO","gloss_def":"definición cotidiana","plan_cats":[{"ico":"moon|walk|heart|shield","label":"categoría","fichas":[{"num":"R1","titulo":"título","impacto":5,"porq":"personalizado con datos del usuario","como":"acción concreta","accion":"→ acción inmediata","warn":"prohibido o vacío"}]}],"suplementos":[{"nombre":"Nombre","dosis":"Xg","cuando":"momento","desc":"justificación con NEGRITA: para lo importante","mecanismo":"breve","url_key":"creatina|magnesio|coq10|omega3|d3k2|vitb|whey|guisante|ashwagandha|alcar|rala|urolitina|probioticos|lisina|citrulina","ico":"zap|leaf|pill"}],"semana":{"lun":["walk:texto"],"mar":["mind:texto","suppl:texto"],"mie":["walk:texto","cold:texto"],"jue":["mind:texto","suppl:texto"],"vie":["walk:texto","strength:texto"],"sab":["walk:texto","rest:texto"],"dom":["rest:texto","mind:texto"]},"siempre":["ítem 1","ítem 2","ítem 3","ítem 4","ítem 5"],"errores":[{"titulo":"error 1","texto":"específico para este perfil"},{"titulo":"error 2","texto":"..."},{"titulo":"error 3","texto":"..."}],"gauges":[{"titulo":"marcador","desc":"instrucciones domésticas","freq":"frecuencia","color":"rs|rt|rg","ico":"sun|moon|brain|chart","offset":74}],"edad_metabolica_actual":${edadMeta.actual},"edad_metabolica_objetivo":${edadMeta.objetivo},"edad_metabolica_desc":"frase concreta de mejora","mentalidad":"frase corta directa y específica para este perfil","cta_hook":"diferencial con datos específicos del usuario","cta_items":[{"titulo":"Menú semanal completo (7 días)","desc":"desayuno comida y cena adaptados a tu perfil y restricciones"},{"titulo":"Plan de ejercicio con progresión semanal","desc":"qué hacer cuántas series a qué intensidad adaptado a tu nivel"},{"titulo":"Stack de suplementación semana a semana","desc":"qué tomar cada semana cómo combinarlo y qué esperar"},{"titulo":"Protocolo de sueño y recuperación personalizado","desc":"intervenciones ordenadas por impacto para tu nivel de estrés concreto"},{"titulo":"La mentalidad concreta que necesitas según tus respuestas","desc":"un marco mental personalizado para no abandonar en la semana 2"},{"titulo":"Hoja de seguimiento descargable","desc":"para ver la progresión semana a semana con tus métricas"}],"vs_free":["Análisis fisiológico completo","Plan general 80/20","3 suplementos recomendados","Timeline semanal orientativo","Marcadores de control"],"vs_premium":["Todo lo del informe gratuito","Menú semanal con recetas","Plan de ejercicio con progresión","Protocolo de sueño paso a paso","Marco mental personalizado","Hoja de seguimiento descargable"]}`;
 }
 // ═══════════════════════════════════════════
 // URL MAP
@@ -1176,6 +1188,13 @@ function renderCTA(d){
   const metaObjetivo=d.edad_metabolica_objetivo||parseInt(S.edad)-2;
 
   return `<div class="cta-wrap">
+    <div class="share-wrap">
+      <button class="share-btn" onclick="shareReport(${metaActual})">
+        <svg class="ico"><use href="#i-share"/></svg>
+        Compartir mi informe
+      </button>
+      <div class="share-confirm" id="share-confirm"></div>
+    </div>
     <div class="cta-free-teaser">
       <div class="cta-ft-label">Mantente al día</div>
       <div class="cta-ft-title">Recibe actualizaciones semanales de longevidad para tu perfil</div>
@@ -1237,24 +1256,47 @@ function renderCTA(d){
 }
 
 // ═══════════════════════════════════════════
-// COVER
+// COVER — hero Unsplash + edad metabólica
 // ═══════════════════════════════════════════
-function buildCover(imc){
-  const rest=S.restricciones.length?S.restricciones.join(', '):'Sin restricciones';
+function buildCover(imc, edadMeta){
+  const img=S.sexo==='hombre'
+    ?'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&q=80'
+    :'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&q=80';
+  const tags=S.objetivos.map(o=>`<div class="dos-obj-tag">${o}</div>`).join('');
+  const ea=edadMeta?edadMeta.actual:parseInt(S.edad)+4;
+  const eo=edadMeta?edadMeta.objetivo:parseInt(S.edad)-1;
   document.getElementById('dos-cover').innerHTML=`
-    <div class="dos-top"><div class="dos-brand">20<b>80</b>.fit</div><div class="dos-badge">Informe Gratuito</div></div>
-    <div class="dos-kicker">Perfil detectado · 2080.fit</div>
-    <h1 class="dos-title">Tu plan <em>personalizado</em></h1>
-    <p class="dos-sub">Protocolo basado en evidencia científica, adaptado a tus datos y objetivos concretos.</p>
-    <div class="dos-user-card">
-      <div class="duc"><span class="duc-l">Edad</span><span class="duc-v">${S.edad} años</span></div>
-      <div class="duc"><span class="duc-l">IMC</span><span class="duc-v">${imc}</span></div>
-      <div class="duc"><span class="duc-l">Sexo</span><span class="duc-v">${S.sexo.charAt(0).toUpperCase()+S.sexo.slice(1)}</span></div>
-      <div class="duc"><span class="duc-l">Actividad</span><span class="duc-v">${S.actividad||'—'}</span></div>
-      <div class="duc"><span class="duc-l">Sueño</span><span class="duc-v">${S.sueno||'—'}</span></div>
-      <div class="duc"><span class="duc-l">Estrés</span><span class="duc-v">${S.estres} / 10</span></div>
+    <div class="dos-hero" style="background-image:linear-gradient(rgba(24,23,20,.72),rgba(24,23,20,.55)),url('${img}')">
+      <div class="dos-hero-inner">
+        <div class="dos-top">
+          <div class="dos-brand" style="color:rgba(244,239,230,.7)">20<b style="color:var(--ob-sage);font-weight:400">80</b>.fit</div>
+          <div class="dos-badge">Informe Gratuito</div>
+        </div>
+        <div class="dos-hero-body">
+          <div class="dos-kicker" style="color:var(--ob-sage)"><span style="display:inline-block;width:26px;height:1px;background:var(--ob-sage);margin-right:10px;vertical-align:middle"></span>Perfil detectado · 2080.fit</div>
+          <h1 class="dos-title" style="color:var(--cream);margin-bottom:0">Tu plan <em style="color:var(--ob-terra)">personalizado</em></h1>
+          <div class="dos-hero-sep"></div>
+          <div class="dos-hero-meta">
+            <span class="dos-hero-meta-now">${ea}</span>
+            <span class="dos-hero-meta-arrow">→</span>
+            <span class="dos-hero-meta-goal">${eo}</span>
+          </div>
+          <div class="dos-hero-meta-lbl">edad metabólica estimada · objetivo en 4 semanas</div>
+          <div class="dos-obj-tags" style="margin:0">${tags}</div>
+        </div>
+      </div>
     </div>
-    <div class="dos-obj-tags">${S.objetivos.map(o=>`<div class="dos-obj-tag">${o}</div>`).join('')}</div>`;
+    <div class="dos-cover-below">
+      <div class="dos-user-card-compact">
+        <div class="duc"><span class="duc-l">Edad</span><span class="duc-v">${S.edad} años</span></div>
+        <div class="duc"><span class="duc-l">IMC</span><span class="duc-v">${imc}</span></div>
+        <div class="duc"><span class="duc-l">Cintura</span><span class="duc-v">${S.cintura?S.cintura+'cm':'—'}</span></div>
+        <div class="duc"><span class="duc-l">Sexo</span><span class="duc-v">${S.sexo.charAt(0).toUpperCase()+S.sexo.slice(1)}</span></div>
+        <div class="duc"><span class="duc-l">Actividad</span><span class="duc-v">${S.actividad||'—'}</span></div>
+        <div class="duc"><span class="duc-l">Sueño</span><span class="duc-v">${S.sueno||'—'}</span></div>
+        <div class="duc"><span class="duc-l">Estrés</span><span class="duc-v">${S.estres} / 10</span></div>
+      </div>
+    </div>`;
 }
 
 // ═══════════════════════════════════════════
@@ -1286,6 +1328,35 @@ function toggleMethod(btn){
 }
 
 // ═══════════════════════════════════════════
+// SHARE
+// ═══════════════════════════════════════════
+async function shareReport(edadActual){
+  const shareData={
+    title:'Mi plan de longevidad 2080.fit',
+    text:`Acabo de descubrir que mi edad metabólica es ${edadActual} años. Descubre la tuya gratis:`,
+    url:'https://2080.fit'
+  };
+  const confirm=document.getElementById('share-confirm');
+  try{
+    if(navigator.share){
+      await navigator.share(shareData);
+    } else {
+      await navigator.clipboard.writeText('https://2080.fit');
+      if(confirm){confirm.textContent='✓ Enlace copiado al portapapeles';}
+      setTimeout(()=>{if(confirm) confirm.textContent='';},3000);
+    }
+  }catch(e){
+    if(e.name!=='AbortError'){
+      try{
+        await navigator.clipboard.writeText('https://2080.fit');
+        if(confirm){confirm.textContent='✓ Enlace copiado al portapapeles';}
+        setTimeout(()=>{if(confirm) confirm.textContent='';},3000);
+      }catch(ce){console.warn('share/clipboard error',ce);}
+    }
+  }
+}
+
+// ═══════════════════════════════════════════
 // EMAIL
 // ═══════════════════════════════════════════
 function submitFreeEmail(){
@@ -1299,7 +1370,7 @@ function submitFreeEmail(){
 // RESET
 // ═══════════════════════════════════════════
 function resetApp(){
-  Object.assign(S,{nombre:'',email:'',sexo:'',q2:'',q4:'',q5:'',open2:'',open3:'',open4:'',open5:'',objetivos:[],restricciones:[],actividad:'',medicacion:[],sueno:'',estres:5,edad:'',peso:'',altura:''});
+  Object.assign(S,{nombre:'',email:'',sexo:'',q2:'',q4:'',q5:'',open2:'',open3:'',open4:'',open5:'',objetivos:[],restricciones:[],actividad:'',medicacion:[],sueno:'',estres:5,edad:'',peso:'',altura:'',cintura:''});
   document.getElementById('dossier').classList.remove('active');
   document.getElementById('loading').classList.remove('active');
   document.getElementById('onboarding').style.display='';
@@ -1312,10 +1383,39 @@ function resetApp(){
   for(let i=0;i<5;i++){const el=document.getElementById('ls'+i);if(el){el.classList.remove('vis','done');}}
   document.querySelectorAll('.ob-chip').forEach(c=>c.classList.remove('sel'));
   document.querySelectorAll('.ob-opt').forEach(o=>o.classList.remove('sel','multi-sel'));
-  ['f-edad','f-peso','f-altura','f-nombre','f-email','f-open2','f-open3','f-open4','f-open5'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});
+  ['f-edad','f-peso','f-altura','f-cintura','f-nombre','f-email','f-open2','f-open3','f-open4','f-open5'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});
   document.getElementById('f-estres').value=5;
   document.getElementById('estres-val').textContent='5';
   goTo(0);
+}
+
+// ═══════════════════════════════════════════
+// PRO FLOW — ?pro=true en URL
+// ═══════════════════════════════════════════
+function checkProFlow(){
+  if(!window.location.search.includes('pro=true')) return;
+  const stored=localStorage.getItem('2080fit_session');
+  if(!stored){
+    const msg=document.createElement('div');
+    msg.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--ob-terra);color:var(--paper);padding:12px 20px;font-family:DM Mono,monospace;font-size:12px;z-index:200;border-radius:2px;letter-spacing:.5px';
+    msg.textContent='Completa primero el informe gratuito';
+    document.body.appendChild(msg);
+    setTimeout(()=>msg.remove(),4000);
+    return;
+  }
+  try{
+    const session=JSON.parse(stored);
+    Object.assign(S,{
+      nombre:session.nombre||'',email:session.email||'',sexo:session.sexo||'',
+      edad:session.edad||'',peso:session.peso||'',altura:session.altura||'',cintura:session.cintura||'',
+      objetivos:session.objetivos||[],restricciones:session.restricciones||[],
+      actividad:session.actividad||'',medicacion:session.medicacion||[],
+      sueno:session.sueno||'',estres:session.estres||5,
+      q2:session.q2||'',q4:session.q4||'',q5:session.q5||'',
+      open2:session.open2||'',open3:session.open3||'',open4:session.open4||'',open5:session.open5||''
+    });
+    generateReport(true);
+  }catch(e){console.error('Error en pro flow:',e);}
 }
 
 // ═══════════════════════════════════════════
@@ -1407,6 +1507,7 @@ function delay(ms){return new Promise(r=>setTimeout(r,ms));}
 
 // Init
 goTo(0);
+checkProFlow();
 </script>
 </body>
 </html>
