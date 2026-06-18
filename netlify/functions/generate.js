@@ -29,7 +29,7 @@ REGLAS ABSOLUTAS:
 - Usa los valores de edad_metabolica_actual y edad_metabolica_objetivo que se te pasan
 - El plan PRO incluye menu_semanal y plan_entrenamiento detallados`;
 
-function httpsPost(hostname, path, headers, body) {
+function httpsPost(hostname, path, headers, body, timeoutMs) {
   return new Promise((resolve, reject) => {
     const bodyStr = typeof body === 'string' ? body : JSON.stringify(body);
     const req = https.request(
@@ -45,6 +45,12 @@ function httpsPost(hostname, path, headers, body) {
         res.on('end', () => resolve({ status: res.statusCode, body: data }));
       }
     );
+    if (timeoutMs) {
+      req.setTimeout(timeoutMs, () => {
+        req.destroy();
+        reject(new Error(`Timeout: no hubo respuesta en ${Math.round(timeoutMs / 1000)}s`));
+      });
+    }
     req.on('error', reject);
     req.write(bodyStr);
     req.end();
@@ -60,10 +66,19 @@ async function callClaude(apiKey, system, prompt, maxTokens) {
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01'
     },
-    { model: 'claude-sonnet-4-6', max_tokens: maxTokens, system, messages: [{ role: 'user', content: prompt }] }
+    { model: 'claude-sonnet-4-6', max_tokens: maxTokens, system, messages: [{ role: 'user', content: prompt }] },
+    22000
   );
-  const data = JSON.parse(body);
-  if (status !== 200) throw new Error(data.error?.message || `Claude API ${status}`);
+  let data;
+  try {
+    data = JSON.parse(body);
+  } catch (e) {
+    throw new Error(`Claude devolvió respuesta no-JSON (status ${status}): ${body.slice(0, 200)}`);
+  }
+  if (status !== 200) {
+    const msg = data.error?.message || data.error?.type || `HTTP ${status}`;
+    throw new Error(`Claude ${status}: ${msg}`);
+  }
   return { text: data.content?.[0]?.text || '{}', usage: data.usage };
 }
 
@@ -75,7 +90,8 @@ function saveToAirtable(fields) {
     'api.airtable.com',
     `/v0/${base}/${AIRTABLE_TABLE}`,
     { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-    { fields }
+    { fields },
+    5000
   ).catch((e) => console.error('[Airtable] save error:', e.message));
 }
 
@@ -131,16 +147,12 @@ exports.handler = async (event) => {
   try {
     ({ text, usage } = await callClaude(apiKey, system, prompt, maxTokens));
   } catch (err) {
-    console.error('[Claude] intento 1 fallido:', err.message);
-    try {
-      ({ text, usage } = await callClaude(apiKey, system, prompt, maxTokens));
-    } catch (err2) {
-      return {
-        statusCode: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Claude API error: ' + err2.message })
-      };
-    }
+    console.error('[Claude] llamada fallida:', err.message);
+    return {
+      statusCode: 502,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: err.message })
+    };
   }
 
   let parsed;

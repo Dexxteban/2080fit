@@ -53,7 +53,7 @@ body{background:var(--ob-bg);color:var(--ob-text);font-family:'DM Sans',sans-ser
 
 .ob-stats{display:flex;gap:32px;flex-wrap:wrap;margin-bottom:44px}
 .ob-stat{display:flex;flex-direction:column;gap:3px}
-.ob-stat-n{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--ob-text);line-height:1}
+.ob-stat-n{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--ob-text);line-height:1}
 .ob-stat-l{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ob-dim)}
 
 /* name/email fields on screen 0 */
@@ -548,7 +548,7 @@ abbr{text-decoration:underline dotted var(--terra);cursor:help;color:var(--dark)
     <div class="ob-stats">
       <div class="ob-stat"><span class="ob-stat-n">47+</span><span class="ob-stat-l">Fuentes científicas</span></div>
       <div class="ob-stat"><span class="ob-stat-n" id="stat-users">247</span><span class="ob-stat-l">Perfiles generados</span></div>
-      <div class="ob-stat"><span class="ob-stat-n" style="font-size:15px;line-height:1.3;color:var(--ob-terra)">¿Cuántos años<br>tiene tu cuerpo?</span><span class="ob-stat-l" style="text-transform:none;letter-spacing:.3px;font-size:8px">Descúbrelo en 2 minutos</span></div>
+      <div class="ob-stat"><span class="ob-stat-n" style="font-size:15px;line-height:1.3;color:var(--ob-terra);font-style:italic;font-weight:400">¿Cuántos años<br>tiene tu cuerpo?</span><span class="ob-stat-l" style="text-transform:none;letter-spacing:.3px;font-size:8px">Descúbrelo en 2 minutos</span></div>
     </div>
     <div class="ob-lead-fields">
       <div class="ob-lead-field"><label>Tu nombre <span style="opacity:.4">(opcional)</span></label><input type="text" id="f-nombre" placeholder="María"></div>
@@ -763,9 +763,17 @@ const DEMO_MODE = false;
 const STRIPE_LINK = 'https://buy.stripe.com/INSERTAR_LINK_AQUI';
 
 // Airtable movido al backend (netlify/functions/generate.js)
-// El contador muestra número estático hasta que conectemos Airtable read vía función
 function loadUserCount(){
-  document.getElementById('stat-users').textContent='247';
+  const base=247;
+  let count=base;
+  try{count=parseInt(localStorage.getItem('2080fit_count')||base);}catch{}
+  document.getElementById('stat-users').textContent=count;
+}
+function incrementUserCount(){
+  let count=247;
+  try{count=parseInt(localStorage.getItem('2080fit_count')||247)+1;localStorage.setItem('2080fit_count',count);}catch{}
+  const el=document.getElementById('stat-users');
+  if(el) el.textContent=count;
 }
 loadUserCount();
 
@@ -958,8 +966,13 @@ async function generateReport(isPro=false){
       });
       if(!res.ok){
         let errMsg='HTTP '+res.status;
-        try{const e=await res.clone().json();errMsg=e.error||errMsg;}
-        catch{try{const t=await res.text();errMsg=res.status===404?'Función no encontrada (404) — verifica el deploy en Netlify':t.slice(0,120);}catch{}}
+        try{
+          const bodyTxt=await res.text();
+          if(bodyTxt){
+            try{const e=JSON.parse(bodyTxt);errMsg=e.error||errMsg;}
+            catch{errMsg=res.status===404?'Función no encontrada (404) — verifica el deploy en Netlify':bodyTxt.slice(0,150);}
+          }
+        }catch{}
         throw new Error(errMsg);
       }
       const raw=await res.json();
@@ -983,6 +996,7 @@ async function generateReport(isPro=false){
         fecha:new Date().toISOString()
       }));
     }catch(e){console.warn('localStorage unavailable');}
+    incrementUserCount();
     renderDossier(data);
     document.getElementById('loading').classList.remove('active');
     document.getElementById('dossier').classList.add('active');
